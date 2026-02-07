@@ -6,7 +6,7 @@ import os
 class RecognitionService:
     def __init__(self):
         # Replace with your Client API Key from acoustid.org
-        self.api_key = 'YOUR_ACOUSTID_CLIENT_KEY'
+        self.api_key = 'mH7FTfAlK6'
 
     def record_audio(self, duration=15, filename='temp_recording.wav', device_index=None):
         """
@@ -38,12 +38,8 @@ class RecognitionService:
         print("🔍 Generating fingerprint and querying AcoustID...")
         
         try:
-            # acoustid.match returns a generator/iterator
-            # We look for the best match
             for score, recording_id, title, artist in acoustid.match(self.api_key, file_path):
-                
-                # AcoustID returns a score. Since vinyl is noisy, 
-                # we accept anything reasonable.
+                # a match was found
                 return {
                     "status": "Success",
                     "score": score,
@@ -52,7 +48,7 @@ class RecognitionService:
                     "id": recording_id
                 }
             
-            # If the loop finishes without returning, no match was found
+            # no match was found
             return {"status": "No Match Found"}
 
         except acoustid.FingerprintGenerationError:
