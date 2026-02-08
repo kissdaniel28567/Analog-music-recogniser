@@ -20,6 +20,15 @@ class AudioProcessor:
     def check_music_start(self, indata, threshold=0.01, required_duration=0.5, chunk_duration=0.1):
         """
         Determines if music has started based on sustained volume.
+
+        Args:
+            indata: The audio chunk.
+            threshold: The RMS value above which we consider 'sound' (not silence).
+            required_duration: How many seconds of sustained sound we need.
+            chunk_duration: The length of this specific audio chunk in seconds.
+
+        Returns:
+            True if music has started, False otherwise.
         """
         rms = self.calculate_rms(indata)
         
