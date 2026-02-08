@@ -47,3 +47,41 @@ class AudioProcessor:
         """Resets the detection state (e.g., when the track ends)."""
         self.consecutive_loud_duration = 0
         self.is_playing = False
+
+    def detect_clicks(self, indata, sensitivity=10):
+        """
+        Detects pops and clicks using statistical outlier detection on the signal derivative.
+        
+        Args:
+            indata: The audio chunk.
+            sensitivity: How many standard deviations a spike must be to count as a click.
+                         Lower = more sensitive (might detect drums as clicks).
+                         Higher = less sensitive (only detects huge pops).
+        
+        Returns:
+            int: The number of clicks detected in this chunk.
+        """
+        # 1. Convert to mono for analysis
+        if indata.shape[1] > 1:
+            mono_data = np.mean(indata, axis=1)
+        else:
+            mono_data = indata.flatten()
+
+        # 2. Calculate the 'First Difference' (Derivative)
+        diff = np.diff(mono_data)
+
+        # 3. Calculate Statistics
+        abs_diff = np.abs(diff)
+        mean_val = np.mean(abs_diff)
+        std_dev = np.std(abs_diff)
+
+        if std_dev == 0:
+            return 0
+
+        # 4. Count outliers
+        threshold = mean_val + (sensitivity * std_dev)
+        
+        click_mask = abs_diff > threshold
+        num_clicks = np.sum(click_mask)
+        
+        return int(num_clicks)
