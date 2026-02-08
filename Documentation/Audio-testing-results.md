@@ -21,4 +21,8 @@ indata = np.array([
  ```
 
 ### Detecting when a track starts
-#### I have came up with the idea to use RMS calculations to determine wherethere a song have started or not. The if the RMS volume passes a threshold, we detect it as the track has started.
+#### I have came up with the idea to use RMS calculations to determine wherethere a song have started or not. The if the RMS volume passes a threshold, we detect it as the track has started. RMS is calculated via this operation:
+$$
+\mathrm{RMS} = \sqrt{\frac{1}{N}\sum_{i=1}^{N} x_i^2}
+$$
+
