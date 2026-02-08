@@ -1,4 +1,5 @@
 from services.recognition_service import RecognitionService
+from audio.capture import AudioCapture
 import sounddevice as sd
 import asyncio
 import os
@@ -13,18 +14,19 @@ def main():
         print("Invalid ID")
         return
 
-    # 2. Initialize Service
-    service = RecognitionService()
+    # 2. Initialize Services
+    recognitionService = RecognitionService()
+    audioService = AudioCapture()
 
     # 3. Record (Shazam is very good, 5-8 seconds is usually enough!)
-    audio_file = service.record_audio(duration=8, device_index=device_id)
+    audio_file = audioService.record_audio(duration=8, device_index=device_id)
 
     if not audio_file:
         print("Error recording audio.")
         return
 
     # 4. Identify (Must run async function)
-    result = asyncio.run(service.identify_audio(audio_file))
+    result = asyncio.run(recognitionService.identify_audio(audio_file))
 
     # 5. Print Results
     print("\n--- 🎵 SHAZAM RESULT 🎵 ---")
