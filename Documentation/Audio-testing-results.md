@@ -20,9 +20,66 @@ indata = np.array([
 ])
  ```
 
-### Detecting when a track starts
+## Detecting when a track starts
 #### I have came up with the idea to use RMS calculations to determine wherethere a song have started or not. The if the RMS volume passes a threshold, we detect it as the track has started. RMS is calculated via this operation:
 $$
 \mathrm{RMS} = \sqrt{\frac{1}{N}\sum_{i=1}^{N} x_i^2}
 $$
+
+## Click Detection Algorithm
+This algorithm detects audio clicks and pops by identifying statistically significant, short-duration transients in the time domain.
+
+### Overview
+Clicks are characterized by abrupt, high-amplitude changes between adjacent audio samples. The algorithm emphasizes these changes using a first-difference operation and detects them as statistical outliers relative to normal signal behavior within a short time block.
+
+---
+
+### Algorithm Steps
+
+1. **Channel Reduction (Stereo → Mono)**  
+   If the input signal has multiple channels, they are averaged to produce a single mono signal:
+   - Reduces dimensionality
+   - Preserves broadband transients such as clicks
+
+2. **First Difference (Discrete Derivative)**  
+   The mono signal is differenced sample-to-sample:
+   $$
+   d[n] = x[n] - x[n-1]
+   $$
+   This acts as a first-order high-pass filter, suppressing slowly varying audio content and emphasizing rapid transients.
+
+3. **Rectification**  
+   The absolute value of the derivative is taken:
+   $$
+   |d[n]|
+   $$
+   This ensures both positive and negative spikes caused by clicks are treated equally.
+
+4. **Statistical Modeling**  
+   The mean ($\mu$) and standard deviation ($\sigma$) of the absolute derivative are computed over the block:
+   $$\mu = \mathbb{E}[|d[n]|], \quad \sigma = \sqrt{\mathbb{E}[(|d[n]| - \mu)^2]}$$
+   These values characterize the typical sample-to-sample variation of the signal.
+
+5. **Adaptive Thresholding (Outlier Detection)**  
+   A detection threshold is defined as:
+   $$
+   T = \mu + k\sigma
+   $$
+   where $k$ is a user-defined sensitivity parameter. Samples exceeding this threshold are classified as click candidates.
+
+6. **Click Counting**  
+   The total number of samples exceeding the threshold is counted. Each physical click may produce multiple detections due to its bipolar and oscillatory nature.
+
+---
+
+### Notes and Limitations
+- The algorithm operates entirely in the time domain.
+- It assumes clicks are rare, high-energy events relative to normal audio.
+- Percussive sounds may produce false positives.
+- Detected counts represent threshold crossings, not clustered click events.
+
+---
+
+### Summary
+This method implements derivative-based transient detection with adaptive statistical thresholding. It is computationally efficient and well-suited for real-time or block-based audio analysis.
 
