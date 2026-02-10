@@ -107,3 +107,13 @@ class AudioProcessor:
 
         balance = (rms_right - rms_left) / (rms_right + rms_left)
         return balance
+    
+    def measure_rumble(self, indata):
+        fft_spectrum = np.fft.rfft(indata[:, 0]) # Analyze left channel
+        frequencies = np.fft.rfftfreq(len(indata), d=1/self.sample_rate)
+        
+        idx_low = np.argmax(frequencies > 10)
+        idx_high = np.argmax(frequencies > 50)
+
+        rumble_energy = np.sum(np.abs(fft_spectrum[idx_low:idx_high]))
+        return rumble_energy
