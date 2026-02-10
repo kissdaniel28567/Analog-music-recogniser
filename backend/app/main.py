@@ -44,9 +44,9 @@ def audio_processing_thread(app):
                 rms_volume = processor.calculate_rms(indata)
 
                 # 4. Update Database (Only if something happened)
+                active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
+                
                 if music_playing or clicks > 0:
-                    active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
-                    
                     if active_cart:
                         if clicks > 0:
                             active_cart.total_clicks += clicks
