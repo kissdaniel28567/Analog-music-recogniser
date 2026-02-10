@@ -83,3 +83,46 @@ Clicks are characterized by abrupt, high-amplitude changes between adjacent audi
 ### Summary
 This method implements derivative-based transient detection with adaptive statistical thresholding. It is computationally efficient and well-suited for real-time or block-based audio analysis.
 
+
+## Measuring Stereo Balance
+
+To understand whether the audio is leaning toward the left or the right channel, I compare the **RMS** (root mean square) loudness of both channels. RMS gives a stable representation of perceived loudness.
+
+The stereo balance is then computed using this formula:
+
+$$
+\text{balance} = \frac{R - L}{R + L}
+$$
+
+Where:
+
+*   L = RMS of the left channel
+*   R = RMS of the right channel
+
+This produces a value between **-1 and +1**:
+
+*   **-1** → fully left
+*   **0** → centered
+*   **+1** → fully right
+
+If both channels are silent, the balance is simply reported as **0**.
+
+***
+
+## Measuring Low‑Frequency Rumble
+
+Turntables and vinyl playback often produce unwanted low‑frequency noise known as *rumble*. To quantify this, I take the **FFT** (Fast Fourier Transform) of the incoming audio and look specifically at the frequency range between **10 Hz and 50 Hz**, which is where rumble typically occurs.
+
+After computing the FFT:
+
+$$
+X(f) = \text{FFT of the signal}
+$$
+
+I sum the magnitude of all spectral components in the rumble band:
+
+$$
+\text{rumble energy} = \sum_{f=10}^{50} |X(f)|
+$$
+
+This provides a simple numeric value representing how much low‑frequency mechanical noise is present in the audio.

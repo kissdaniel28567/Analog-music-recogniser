@@ -109,6 +109,16 @@ class AudioProcessor:
         return balance
     
     def measure_rumble(self, indata):
+        """
+        Measures low‑frequency rumble by summing FFT energy between 10–50 Hz.
+
+        Args:
+            indata (numpy.ndarray): 2‑channel audio data.
+
+        Returns:
+            float: Total spectral energy in the 10–50 Hz band.
+        """
+
         fft_spectrum = np.fft.rfft(indata[:, 0]) # Analyze left channel
         frequencies = np.fft.rfftfreq(len(indata), d=1/self.sample_rate)
         
