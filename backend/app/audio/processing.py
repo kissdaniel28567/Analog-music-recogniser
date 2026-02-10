@@ -85,3 +85,25 @@ class AudioProcessor:
         num_clicks = np.sum(click_mask)
         
         return int(num_clicks)
+    
+    def get_channel_balance(self, indata):
+
+        """
+        Calculates the stereo balance based on RMS levels of left and right channels.
+
+        Args:
+            indata (numpy.ndarray): 2‑channel audio data.
+
+        Returns:
+            float: Balance value between -1 (left‑heavy) and +1 (right‑heavy).
+                Returns 0 if both channels are silent.
+        """
+
+        rms_left = self.calculate_rms(indata[:, 0])
+        rms_right = self.calculate_rms(indata[:, 1])
+        
+        if rms_left + rms_right == 0:
+            return 0 
+
+        balance = (rms_right - rms_left) / (rms_right + rms_left)
+        return balance
