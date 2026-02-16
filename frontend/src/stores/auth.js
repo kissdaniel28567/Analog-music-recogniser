@@ -18,6 +18,20 @@ export const useAuthStore = defineStore('auth', {
                 return false;
             }
         },
+        async register(username, password) {
+            try {
+                await api.register({ username, password });
+                return await this.login(username, password);
+            } catch (error) {
+                console.error("Registration failed", error);
+                return false;
+            }
+        },
+        async logout() {
+            await api.logout();
+            this.user = null;
+            this.isAuthenticated = false;
+        },
         async logout() {
             await api.logout();
             this.user = null;
