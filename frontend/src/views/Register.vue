@@ -1,18 +1,17 @@
 <template>
   <div class="auth-container">
     <div class="card auth-card">
-      <!-- Logic is the same as before, just wrapped in new classes -->
-      <h2>🔑 Login</h2>
-      <form @submit.prevent="handleLogin">
-        <input v-model="username" placeholder="Username" required />
-        <input v-model="password" type="password" placeholder="Password" required />
-        <button type="submit">Enter</button>
+      <h2>📝 Register</h2>
+      <form @submit.prevent="handleRegister">
+        <input v-model="username" placeholder="Choose Username" required />
+        <input v-model="password" type="password" placeholder="Choose Password" required />
+        <button type="submit">Create Account</button>
       </form>
       <p v-if="error" class="error">{{ error }}</p>
-
+      
       <p class="switch-link">
-        New here? 
-        <router-link to="/register">Create an account</router-link>
+        Already have an account? 
+        <router-link to="/login">Login here</router-link>
       </p>
     </div>
   </div>
@@ -29,12 +28,12 @@ const error = ref('');
 const authStore = useAuthStore();
 const router = useRouter();
 
-const handleLogin = async () => {
-    const success = await authStore.login(username.value, password.value);
+const handleRegister = async () => {
+    const success = await authStore.register(username.value, password.value);
     if (success) {
         router.push('/dashboard');
     } else {
-        error.value = "Invalid credentials";
+        error.value = "Registration failed (Username might be taken)";
     }
 };
 </script>
