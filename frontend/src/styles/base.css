@@ -1,0 +1,64 @@
+@import './themes.css';
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    font-family: var(--app-font);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 100vh;
+}
+
+/* Specific overrides for Retro Mode on Body */
+[data-style="retro"] body {
+    background-color: var(--retro-bg);
+}
+
+h1, h2, h3 { margin-bottom: 1rem; }
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    background-color: var(--bg-input);
+    color: var(--text-main);
+    border: var(--input-border);
+    border-radius: var(--app-radius);
+    font-family: inherit;
+}
+
+[data-style="modern"] input:focus {
+    outline: 2px solid var(--primary);
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary);
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--app-radius);
+    box-shadow: var(--btn-shadow);
+    font-family: inherit;
+    transition: all 0.1s;
+}
+
+/* Retro Button Press Effect */
+[data-style="retro"] button:active {
+    box-shadow: var(--retro-bevel-active);
+    transform: translate(1px, 1px);
+}
+
+[data-style="modern"] button:hover {
+    background-color: var(--primary-hover);
+}
+
+.card {
+    background-color: var(--bg-card);
+    padding: 2rem;
+    border-radius: var(--app-radius);
+    box-shadow: var(--card-shadow);
+}

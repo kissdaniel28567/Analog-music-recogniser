@@ -1,0 +1,69 @@
+:root {
+    /* --- MODERN THEME (Rounded, Smooth, Gradients) --- */
+    --modern-radius: 16px;
+    --modern-btn-radius: 8px;
+    --modern-font: 'Inter', system-ui, sans-serif;
+    
+    /* --- RETRO THEME (Boxy, Beveled, System Fonts) --- */
+    --retro-radius: 0px;
+    --retro-font: 'Courier New', Courier, monospace;
+    --retro-border-light: 2px solid #dfdfdf;
+    --retro-bevel: inset 2px 2px #fff, inset -2px -2px #000;
+    --retro-bevel-active: inset 2px 2px #000, inset -2px -2px #fff;
+}
+
+/* --- COLOR PALETTES --- */
+
+/* LIGHT MODE */
+[data-theme="light"] {
+    --bg-body: #eef2f6;
+    --bg-card: #ffffff;
+    --bg-input: #f8fafc;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --border-color: #e2e8f0;
+    --retro-bg: #c0c0c0;
+}
+
+/* DARK MODE */
+[data-theme="dark"] {
+    --bg-body: #0f172a;
+    --bg-card: #1e293b;
+    --bg-input: #334155;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --primary: #818cf8;
+    --primary-hover: #6366f1;
+    --border-color: #334155;
+    --retro-bg: #008080;
+}
+
+
+/* MODERN STYLES */
+[data-style="modern"] {
+    --app-radius: var(--modern-radius);
+    --app-font: var(--modern-font);
+    --btn-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --btn-transform: scale(0.98);
+    --input-border: 1px solid transparent;
+}
+
+/* RETRO STYLES */
+[data-style="retro"] {
+    --app-radius: var(--retro-radius);
+    --app-font: var(--retro-font);
+    
+    --bg-card: #c0c0c0;
+    --text-main: black;
+    
+    --btn-shadow: var(--retro-bevel);
+    --card-shadow: 2px 2px 0px 0px #000;
+    --input-border: 2px solid #000;
+    
+    --primary: #000080;
+    --primary-hover: #1084d0;
+    --bg-input: #fff;
+}
