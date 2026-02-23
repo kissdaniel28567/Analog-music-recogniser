@@ -52,9 +52,16 @@ def identify_and_save(app, device_id=None):
             # 5. Save to Database
             with app.app_context():
                 # TODO: Map to user
-                history = TrackHistory(title=title, artist=artist, cover_art=cover)
-                db.session.add(history)
-                db.session.commit()
+                with app.app_context():
+                    try:
+                        history = TrackHistory(title=title, artist=artist, cover_art=cover)
+                        db.session.add(history)
+                        db.session.commit()
+                    except Exception as e:
+                        print(f"❌ DB Error: {e}")
+                        db.session.rollback()
+                    finally:
+                        db.session.remove()
         else:
             print("❌ No match found")
 
@@ -71,70 +78,81 @@ def audio_processing_thread(app):
     """
     print("🎤 Audio Processing Thread Started")
     
-    # Basic Settings
     SAMPLE_RATE = 44100
     BLOCK_SIZE = 4096
-    DB_COMMIT_INTERVAL = 10
+    DB_COMMIT_INTERVAL = 10 
 
     processor = AudioProcessor(sample_rate=SAMPLE_RATE)
-    
+    buffer_clicks = 0
+    buffer_seconds = 0.0
+
     with app.app_context():
         last_commit_time = time.time()
         
-        # --- FIXED LOOP STRUCTURE ---
         while not stop_thread:
-            # 1. State Check: If we are busy identifying, pause this thread
             if is_identifying:
                 time.sleep(1)
                 continue
 
-            # 2. Open Stream (Only if we are LISTENING)
             try:
-                print("👂 Opening Audio Stream...")
                 with sd.InputStream(channels=2, samplerate=SAMPLE_RATE, blocksize=BLOCK_SIZE) as stream:
-                    
-                    # 3. Reading Loop
                     while not stop_thread and not is_identifying:
                         indata, overflow = stream.read(BLOCK_SIZE)
                         
-                        if overflow:
-                            print("⚠️ Audio Buffer Overflow")
-
+                        # 1. Process Audio
                         clicks = processor.detect_clicks(indata)
                         music_playing = processor.check_music_start(indata, chunk_duration=BLOCK_SIZE/SAMPLE_RATE)
                         rms_volume = processor.calculate_rms(indata)
 
-                        # --- AUTO-DETECT TRIGGER ---
+                        # 2. Auto-Detect Trigger
                         if music_playing:
                             print("🎵 Music start detected! Triggering identification...")
-                            
                             threading.Thread(target=identify_and_save, args=(app,)).start()
                             break 
 
-                        # --- DB UPDATES ---
-                        active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
+                        # 3. ACCUMULATE IN MEMORY
+                        if music_playing:
+                            buffer_seconds += (BLOCK_SIZE / SAMPLE_RATE)
                         
-                        if music_playing or clicks > 0:
-                            if active_cart:
-                                if clicks > 0:
-                                    active_cart.total_clicks += clicks
-                                
-                                if music_playing:
-                                    seconds_passed = BLOCK_SIZE / SAMPLE_RATE
-                                    hours_to_add = seconds_passed / 3600.0
-                                    active_cart.total_hours += hours_to_add
+                        if clicks > 0:
+                            buffer_clicks += clicks
 
+                        # 4. WRITE TO DB
                         if time.time() - last_commit_time > DB_COMMIT_INTERVAL:
-                            db.session.commit()
+                            if buffer_seconds > 0 or buffer_clicks > 0:
+                                try:
+                                    active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
+                                    
+                                    if active_cart:
+                                        active_cart.total_hours += (buffer_seconds / 3600.0)
+                                        active_cart.total_clicks += buffer_clicks
+                                        
+                                        db.session.commit()
+                                        print("💾 Stats saved to DB")
+
+                                    buffer_clicks = 0
+                                    buffer_seconds = 0.0
+                                except Exception as e:
+                                    print(f"⚠️ DB Write Error: {e}")
+                                    db.session.rollback()
+                                finally:
+                                    db.session.remove() 
+                            
                             last_commit_time = time.time()
 
-                        # Send Data to Frontend
+                        # 5. Emit to Frontend
+                        #socketio.emit('stats_update', {
+                        #    'is_playing': music_playing,
+                        #    'clicks': clicks,
+                        #    'rms': float(rms_volume),
+                        #})
+
                         socketio.emit('stats_update', {
-                            'is_playing': music_playing,
+                            'is_playing': processor.is_playing, 
                             'clicks': clicks,
-                            'rms': float(rms_volume),
-                            'total_hours': active_cart.total_hours if active_cart else 0,
-                            'total_clicks': active_cart.total_clicks if active_cart else 0
+                            'rms': float(rms_volume)#,
+                            #'total_hours': active_cart.total_hours if active_cart else 0,
+                            #'total_clicks': active_cart.total_clicks if active_cart else 0
                         })
                         
             except Exception as e:
