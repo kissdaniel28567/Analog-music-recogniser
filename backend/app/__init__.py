@@ -11,6 +11,10 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///turntable.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        "connect_args": {"timeout": 30} 
+    }
+
     CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
     db.init_app(app)
     login_manager.init_app(app)
@@ -27,6 +31,12 @@ def create_app():
     app.register_blueprint(cart_bp, url_prefix='/api/cartridges')
 
     with app.app_context():
+        from sqlalchemy import text
+        try:
+            db.session.execute(text("PRAGMA journal_mode=WAL"))
+            print("✅ SQLite WAL Mode Enabled")
+        except Exception as e:
+            print(f"⚠️ Could not enable WAL mode: {e}")
         db.create_all()
 
     return app
