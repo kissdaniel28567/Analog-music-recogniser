@@ -110,78 +110,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { useAuthStore } from '../stores/auth';
-import { useRouter } from 'vue-router';
-import { io } from "socket.io-client";
-import '../styles/dashboard.css'; // Import the new CSS file
+import { useDashboard } from '../composables/useDashboard';
+import '../styles/dashboard.css';
 
-const authStore = useAuthStore();
-const router = useRouter();
-const showUserMenu = ref(false);
-const activeTab = ref('diagnostics');
-
-// Backend Data
-const isPlaying = ref(false);
-const isDetecting = ref(false);
-const hoursPlayed = ref(0);
-const totalClicks = ref(0);
-const currentRMS = ref(0);
-const currentTrack = ref({ title: '', artist: '', cover: null });
-
-let socket = null;
-
-const toggleUserMenu = () => showUserMenu.value = !showUserMenu.value;
-const handleLogout = async () => {
-  await authStore.logout();
-  router.push('/login');
-};
-
-const triggerManualDetect = () => {
-  // Emit event to backend
-  if(socket) socket.emit('manual_detect');
-  isDetecting.value = true; // Optimistic UI update
-};
-
-onMounted(() => {
-  socket = io('http://localhost:5000');
-  
-  // 1. Listen for Live Stats
-  socket.on('stats_update', (data) => {
-    isPlaying.value = data.is_playing;
-    totalClicks.value = data.clicks; 
-    currentRMS.value = data.rms;
-    hoursPlayed.value = data.total_hours;
-    
-    // If backend says RMS is high but we aren't detecting, we are playing
-    if (data.is_playing && !isDetecting.value) {
-        isPlaying.value = true;
-    }
-  });
-
-  // 2. Listen for Detection Status
-  socket.on('status_change', (data) => {
-      if(data.status === 'identifying') {
-          isDetecting.value = true;
-          isPlaying.value = false; // Stop spinning while identifying? Or keep spinning?
-      } else {
-          isDetecting.value = false;
-      }
-  });
-
-  // 3. Listen for Result
-  socket.on('track_identified', (match) => {
-      if(match) {
-          currentTrack.value = match;
-          isPlaying.value = true;
-      } else {
-          currentTrack.value = { title: "Unknown Track", artist: "Could not identify" };
-      }
-      isDetecting.value = false;
-  });
-});
-
-onUnmounted(() => {
-  if(socket) socket.disconnect();
-});
+const { 
+  authStore, 
+  showUserMenu, 
+  activeTab, 
+  isPlaying, 
+  isDetecting, 
+  hoursPlayed, 
+  totalClicks, 
+  currentRMS, 
+  currentTrack, 
+  toggleUserMenu, 
+  handleLogout, 
+  triggerManualDetect 
+} = useDashboard();
 </script>
