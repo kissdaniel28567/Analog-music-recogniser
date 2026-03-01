@@ -96,6 +96,9 @@ def audio_processing_thread(app):
 
             try:
                 with sd.InputStream(channels=2, samplerate=SAMPLE_RATE, blocksize=BLOCK_SIZE) as stream:
+                    # Trying this fix for stats reference from DB
+                    active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
+
                     while not stop_thread and not is_identifying:
                         indata, overflow = stream.read(BLOCK_SIZE)
                         
@@ -130,6 +133,16 @@ def audio_processing_thread(app):
                                         db.session.commit()
                                         print("💾 Stats saved to DB")
 
+                                        # TODO: fix stat update
+                                        # 5. Emit to Frontend (Two emits combined)
+                                        socketio.emit('stats_update', {
+                                            'is_playing': processor.is_playing, 
+                                            'clicks': clicks,
+                                            'rms': float(rms_volume),
+                                            'total_hours': active_cart.total_hours,
+                                            'total_clicks': active_cart.total_clicks
+                                        })
+
                                     buffer_clicks = 0
                                     buffer_seconds = 0.0
                                 except Exception as e:
@@ -139,22 +152,10 @@ def audio_processing_thread(app):
                                     db.session.remove() 
                             
                             last_commit_time = time.time()
+                            # Trying this fix for stats reference from DB
+                            # active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
 
-                        # TODO: fix stat update
-                        # 5. Emit to Frontend
-                        #socketio.emit('stats_update', {
-                        #    'is_playing': music_playing,
-                        #    'clicks': clicks,
-                        #    'rms': float(rms_volume),
-                        #})
-
-                        socketio.emit('stats_update', {
-                            'is_playing': processor.is_playing, 
-                            'clicks': clicks,
-                            'rms': float(rms_volume)#,
-                            #'total_hours': active_cart.total_hours if active_cart else 0,
-                            #'total_clicks': active_cart.total_clicks if active_cart else 0
-                        })
+                        
                         
             except Exception as e:
                 print(f"❌ Stream Error: {e}")
@@ -164,7 +165,8 @@ def audio_processing_thread(app):
 def handle_manual_detect():
     if not is_identifying:
         from flask import current_app
-        threading.Thread(target=audio_processing_thread, args=(current_app._get_current_object())).start()
+        #threading.Thread(target=audio_processing_thread, args=(current_app._get_current_object())).start()
+        audio_processing_thread(current_app._get_current_object())
 
 if __name__ == '__main__':
     # 1. Create the Flask App
