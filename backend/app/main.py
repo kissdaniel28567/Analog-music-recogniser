@@ -83,7 +83,8 @@ def audio_processing_thread(app):
     DB_COMMIT_INTERVAL = 10 
 
     processor = AudioProcessor(sample_rate=SAMPLE_RATE)
-    buffer_clicks = 0
+    song_start_time = None
+    click_history = []
     buffer_seconds = 0.0
 
     with app.app_context():
@@ -99,7 +100,10 @@ def audio_processing_thread(app):
                     # Trying this fix for stats reference from DB
                     active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
 
-                    while not stop_thread and not is_identifying:
+                    while not stop_thread:
+                        if is_identifying:
+                            time.sleep(1)
+                            continue
                         indata, overflow = stream.read(BLOCK_SIZE)
                         
                         # 1. Process Audio
@@ -108,42 +112,41 @@ def audio_processing_thread(app):
                         rms_volume = processor.calculate_rms(indata)
 
                         # 2. Auto-Detect Trigger
+                        current_track_time = 0.0
                         if music_playing:
+                            if song_start_time is None:
+                                song_start_time = time.time()
+                                # TODO: Clear history for new song. This is not the appropriate place!
+                                click_history = []
+                                print("⏱️ Timer Started")
+                            current_track_time = time.time() - song_start_time
+
+                            buffer_seconds += (BLOCK_SIZE / SAMPLE_RATE)
+
+                            if clicks > 0:
+                                event = {
+                                    "time": round(current_track_time, 2),
+                                    "count": clicks
+                                }
+                                click_history.append(event)
+                                print(f"💥 Click detected at {event['time']}s: {clicks}")
+
                             print("🎵 Music start detected! Triggering identification...")
                             threading.Thread(target=identify_and_save, args=(app,)).start()
-                            break 
-
-                        # 3. ACCUMULATE IN MEMORY
-                        if music_playing:
-                            buffer_seconds += (BLOCK_SIZE / SAMPLE_RATE)
-                        
-                        if clicks > 0:
-                            buffer_clicks += clicks
+                            break
 
                         # 4. WRITE TO DB
                         if time.time() - last_commit_time > DB_COMMIT_INTERVAL:
-                            if buffer_seconds > 0 or buffer_clicks > 0:
+                            if buffer_seconds > 0:
                                 try:
                                     active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
                                     
                                     if active_cart:
                                         active_cart.total_hours += (buffer_seconds / 3600.0)
-                                        active_cart.total_clicks += buffer_clicks
                                         
                                         db.session.commit()
                                         print("💾 Stats saved to DB")
 
-                                        # TODO: fix stat update
-                                        # 5. Emit to Frontend (Two emits combined)
-                                        socketio.emit('stats_update', {
-                                            'is_playing': processor.is_playing, 
-                                            'clicks': clicks,
-                                            'rms': float(rms_volume),
-                                            'total_hours': active_cart.total_hours,
-                                            'total_clicks': active_cart.total_clicks
-                                        })
-
-                                    buffer_clicks = 0
                                     buffer_seconds = 0.0
                                 except Exception as e:
                                     print(f"⚠️ DB Write Error: {e}")
@@ -153,7 +156,19 @@ def audio_processing_thread(app):
                             
                             last_commit_time = time.time()
                             # Trying this fix for stats reference from DB
-                            # active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
+                            active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
+                            # TODO: fix stat update
+                            # 5. Emit to Frontend (Two emits combined)
+                            socketio.emit('stats_update', {
+                                'is_playing': music_playing,
+                                'rms': float(rms_volume),
+
+                                # Trying this more detailed click time logic
+                                'track_time': current_track_time,
+                                'click_history': click_history,
+                                'click_count_now': clicks,
+                                'total_hours': (active_cart.total_hours + (buffer_seconds/3600)) if active_cart else 0
+                            })
 
                         
                         
