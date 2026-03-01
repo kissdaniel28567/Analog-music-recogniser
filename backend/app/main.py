@@ -111,13 +111,18 @@ def audio_processing_thread(app):
                         music_playing = processor.check_music_start(indata, chunk_duration=BLOCK_SIZE/SAMPLE_RATE)
                         rms_volume = processor.calculate_rms(indata)
 
+                        if music_playing:
+                            print("🎵 Music start detected! Triggering identification...")
+                            threading.Thread(target=identify_and_save, args=(app,)).start()
+                            break
+
                         # 2. Auto-Detect Trigger
                         current_track_time = 0.0
-                        if music_playing:
+                        if processor.is_playing:
                             if song_start_time is None:
                                 song_start_time = time.time()
                                 # TODO: Clear history for new song. This is not the appropriate place!
-                                click_history = []
+                                # click_history = []
                                 print("⏱️ Timer Started")
                             current_track_time = time.time() - song_start_time
 
@@ -130,10 +135,6 @@ def audio_processing_thread(app):
                                 }
                                 click_history.append(event)
                                 print(f"💥 Click detected at {event['time']}s: {clicks}")
-
-                            print("🎵 Music start detected! Triggering identification...")
-                            threading.Thread(target=identify_and_save, args=(app,)).start()
-                            break
 
                         # 4. WRITE TO DB
                         if time.time() - last_commit_time > DB_COMMIT_INTERVAL:
@@ -157,18 +158,18 @@ def audio_processing_thread(app):
                             last_commit_time = time.time()
                             # Trying this fix for stats reference from DB
                             active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
-                            # TODO: fix stat update
-                            # 5. Emit to Frontend (Two emits combined)
-                            socketio.emit('stats_update', {
-                                'is_playing': music_playing,
-                                'rms': float(rms_volume),
-
-                                # Trying this more detailed click time logic
-                                'track_time': current_track_time,
-                                'click_history': click_history,
-                                'click_count_now': clicks,
-                                'total_hours': (active_cart.total_hours + (buffer_seconds/3600)) if active_cart else 0
-                            })
+                        # TODO: fix stat update
+                        # 5. Emit to Frontend (Two emits combined)
+                        socketio.emit('stats_update', {
+                            'is_playing': processor.is_playing,
+                            'rms': float(rms_volume),
+                            'track_time': current_track_time if processor.is_playing else 0,
+                            # TODO: Replace this with proper track duration from the detected song
+                            'track_duration': 180,
+                            'click_history': click_history,
+                            'click_count_now': clicks,
+                            'total_hours': (active_cart.total_hours + (buffer_seconds/3600)) if active_cart else 0
+                        })
 
                         
                         
