@@ -38,18 +38,18 @@ export function useDashboard() {
     // --- LIFECYCLE (Will remove after debugging) ---
     onMounted(() => {
         socket = io('http://localhost:5000');
-        console.log("DEBUG: Refresh happened");
+        //console.log("DEBUG: Refresh happened");
         // 1. LIVE STATS
         socket.on('stats_update', (data) => {
             isPlaying.value = !!data.is_playing;
             totalClicks.value = data.clicks || 0;
             currentRMS.value = data.rms || 0;
             hoursPlayed.value = data.total_hours || 0;
-            console.log("DEBUG: Refresh stats update happened");
+            //console.log("DEBUG: Refresh stats update happened");
             
             // TODO: POLISH THIS Auto-detect Logic
             if (data.is_playing) {
-                console.log("DEBUG: Refresh in isplaying update happened");
+                //console.log("DEBUG: Refresh in isplaying update happened");
                 if (!isDetecting.value && !currentTrack.value.title && !hasAutoDetected.value) {
                     console.log("🎵 Music detected on load/start! Auto-detecting...");
                     triggerManualDetect();
@@ -63,7 +63,7 @@ export function useDashboard() {
         // 2. STATUS CHANGE
         socket.on('status_change', (data) => {
             // DEBUG LOG: Remove this later
-            console.log("DEBIG: Stats received:", data.is_playing, data.rms);
+            //console.log("DEBIG: Stats received:", data.is_playing, data.rms);
             if (data.status === 'identifying') {
                 isDetecting.value = true;
             } else {

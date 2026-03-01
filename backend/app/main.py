@@ -140,6 +140,7 @@ def audio_processing_thread(app):
                             
                             last_commit_time = time.time()
 
+                        # TODO: fix stat update
                         # 5. Emit to Frontend
                         #socketio.emit('stats_update', {
                         #    'is_playing': music_playing,
@@ -163,7 +164,7 @@ def audio_processing_thread(app):
 def handle_manual_detect():
     if not is_identifying:
         from flask import current_app
-        threading.Thread(target=identify_and_save, args=(current_app._get_current_object(),)).start()
+        threading.Thread(target=audio_processing_thread, args=(current_app._get_current_object())).start()
 
 if __name__ == '__main__':
     # 1. Create the Flask App
