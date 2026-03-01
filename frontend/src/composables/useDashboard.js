@@ -17,6 +17,7 @@ export function useDashboard() {
     const currentRMS = ref(0);
     const currentTrack = ref({ title: '', artist: '', cover: null });
     const trackTime = ref(0);
+    const trackDuration = ref(180);
     const clickHistory = ref([]);
 
     const hasAutoDetected = ref(false);
@@ -58,12 +59,16 @@ export function useDashboard() {
             trackTime.value = data.track_time || 0;
             clickHistory.value = data.click_history || [];
             currentClicks.value = data.click_count_now || 0;
+            trackTime.value = data.track_time || 0;
+            // TODO: This may not work when backend sends proper track length
+            if (data.track_duration) {
+                trackDuration.value = data.track_duration;
+            }
 
             totalClicks.value = clickHistory.value.reduce((sum, item) => sum + item.count, 0);
             
             // TODO: POLISH THIS Auto-detect Logic
             if (data.is_playing) {
-                //console.log("DEBUG: Refresh in isplaying update happened");
                 if (!isDetecting.value && !currentTrack.value.title && !hasAutoDetected.value) {
                     console.log("🎵 Music detected on load/start! Auto-detecting...");
                     triggerManualDetect();
@@ -111,6 +116,7 @@ export function useDashboard() {
         currentRMS,
         currentTrack,
         trackTime,
+        trackDuration,
         clickHistory,
         formatTime,
         toggleUserMenu,
