@@ -89,10 +89,29 @@
           </div>
 
           <div class="stat-item">
-             <span class="stat-label">Detected Clicks/Pops</span>
-             <div class="stat-value" :style="{ color: totalClicks > 10 ? 'var(--danger)' : 'inherit'}">
-               {{ totalClicks }}
+             <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="stat-label">Detected Clicks (Session)</span>
+                <!-- Flash Red if current click > 0 -->
+                <span class="stat-label" :style="{ color: currentClicks > 0 ? 'red' : 'inherit', fontWeight: 'bold' }">
+                   {{ totalClicks }}
+                </span>
              </div>
+             <div class="timeline-container">
+                <div 
+                    class="timeline-playhead" 
+                    :style="{ left: (trackTime / trackDuration) * 100 + '%' }"
+                ></div>
+                <div 
+                    v-for="(click, index) in clickHistory" 
+                    :key="index"
+                    class="click-dot"
+                    :style="{ left: (click.time / trackDuration) * 100 + '%' }"
+                    :title="`Click at ${formatTime(click.time)}`"
+                ></div>
+             </div>
+             <p style="font-size: 0.8rem; color: var(--text-muted); text-align: right; margin-top: 5px;">
+                Visualizing clicks over time
+             </p>
           </div>
 
           <div class="stat-item">
@@ -114,17 +133,9 @@ import { useDashboard } from '../composables/useDashboard';
 import '../styles/dashboard.css';
 
 const { 
-  authStore, 
-  showUserMenu, 
-  activeTab, 
-  isPlaying, 
-  isDetecting, 
-  hoursPlayed, 
-  totalClicks, 
-  currentRMS, 
-  currentTrack, 
-  toggleUserMenu, 
-  handleLogout, 
-  triggerManualDetect 
+  authStore, showUserMenu, activeTab, isPlaying, isDetecting, 
+  hoursPlayed, totalClicks, currentClicks, currentRMS, currentTrack,
+  trackTime, clickHistory, trackDuration, formatTime,
+  toggleUserMenu, handleLogout, triggerManualDetect 
 } = useDashboard();
 </script>

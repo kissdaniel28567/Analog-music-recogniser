@@ -125,6 +125,43 @@
     /* TODO: Create internal flex structure for tabs */
 }
 
+.timer-display {
+    font-size: 1.5rem;
+    font-family: monospace;
+    color: var(--primary);
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.timeline-container {
+    position: relative;
+    width: 100%;
+    height: 30px;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.click-dot {
+    position: absolute;
+    top: 5px; 
+    bottom: 5px;
+    width: 4px;
+    background-color: var(--danger);
+    border-radius: 2px;
+    opacity: 0.8;
+}
+
+.timeline-playhead {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 2px;
+    background-color: var(--text-main);
+    z-index: 10;
+}
+
 .tabs-header {
     display: flex;
     border-bottom: 1px solid var(--border-color);
