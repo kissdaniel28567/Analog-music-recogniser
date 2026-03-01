@@ -13,8 +13,11 @@ export function useDashboard() {
     const isDetecting = ref(false);
     const hoursPlayed = ref(0);
     const totalClicks = ref(0);
+    const currentClicks = ref(0);
     const currentRMS = ref(0);
     const currentTrack = ref({ title: '', artist: '', cover: null });
+    const trackTime = ref(0);
+    const clickHistory = ref([]);
 
     const hasAutoDetected = ref(false);
     let socket = null;
@@ -35,17 +38,28 @@ export function useDashboard() {
         isDetecting.value = true;
     };
 
+    const formatTime = (seconds) => {
+        if (!seconds) return "00:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
     // --- LIFECYCLE (Will remove after debugging) ---
     onMounted(() => {
         socket = io('http://localhost:5000');
-        //console.log("DEBUG: Refresh happened");
+
         // 1. LIVE STATS
         socket.on('stats_update', (data) => {
             isPlaying.value = !!data.is_playing;
             totalClicks.value = data.clicks || 0;
             currentRMS.value = data.rms || 0;
             hoursPlayed.value = data.total_hours || 0;
-            //console.log("DEBUG: Refresh stats update happened");
+            trackTime.value = data.track_time || 0;
+            clickHistory.value = data.click_history || [];
+            currentClicks.value = data.click_count_now || 0;
+
+            totalClicks.value = clickHistory.value.reduce((sum, item) => sum + item.count, 0);
             
             // TODO: POLISH THIS Auto-detect Logic
             if (data.is_playing) {
@@ -62,8 +76,6 @@ export function useDashboard() {
 
         // 2. STATUS CHANGE
         socket.on('status_change', (data) => {
-            // DEBUG LOG: Remove this later
-            //console.log("DEBIG: Stats received:", data.is_playing, data.rms);
             if (data.status === 'identifying') {
                 isDetecting.value = true;
             } else {
@@ -95,8 +107,12 @@ export function useDashboard() {
         isDetecting,
         hoursPlayed,
         totalClicks,
+        currentClicks,
         currentRMS,
         currentTrack,
+        trackTime,
+        clickHistory,
+        formatTime,
         toggleUserMenu,
         handleLogout,
         triggerManualDetect
