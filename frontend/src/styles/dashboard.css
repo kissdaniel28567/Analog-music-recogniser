@@ -121,9 +121,9 @@
 }
 
 /* --- 4. RIGHT PANEL (INFO) --- */
-.right-panel {
-    /* TODO: Create internal flex structure for tabs */
-}
+/*.right-panel {
+     TODO: Create internal flex structure for tabs
+} */
 
 .timer-display {
     font-size: 1.5rem;
@@ -146,20 +146,23 @@
 
 .click-dot {
     position: absolute;
-    top: 5px; 
-    bottom: 5px;
-    width: 4px;
-    background-color: var(--danger);
-    border-radius: 2px;
+    top: 0;
+    bottom: 0;
+    width: 0.5px;
+    background-color: #ef4444;
+    z-index: 5;
     opacity: 0.8;
 }
 
 .timeline-playhead {
     position: absolute;
-    top: 0; bottom: 0;
+    top: 0; 
+    bottom: 0;
     width: 2px;
-    background-color: var(--text-main);
-    z-index: 10;
+    background-color: white;
+    z-index: 10; /* On top of everything */
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    transition: left 0.1s linear; /* Smooth movement */
 }
 
 .tabs-header {
