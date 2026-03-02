@@ -60,6 +60,11 @@ export function useDashboard() {
             clickHistory.value = data.click_history || [];
             currentClicks.value = data.click_count_now || 0;
             trackTime.value = data.track_time || 0;
+
+            // DEBUG LINE FOR
+            console.log("DEBUG: RMS: " + currentRMS.value);
+            
+
             // TODO: This may not work when backend sends proper track length
             if (data.track_duration) {
                 trackDuration.value = data.track_duration;
