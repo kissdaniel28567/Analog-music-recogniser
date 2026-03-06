@@ -48,7 +48,7 @@ class AudioProcessor:
         self.consecutive_loud_duration = 0
         self.is_playing = False
 
-    def detect_clicks(self, indata, sensitivity=10):
+    def detect_clicks(self, indata, sensitivity=20):
         """
         Detects pops and clicks using statistical outlier detection on the signal derivative.
         

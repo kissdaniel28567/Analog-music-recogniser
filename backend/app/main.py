@@ -83,7 +83,8 @@ def audio_processing_thread(app):
     DB_COMMIT_INTERVAL = 10 
 
     processor = AudioProcessor(sample_rate=SAMPLE_RATE)
-    buffer_clicks = 0
+    song_start_time = None
+    click_history = []
     buffer_seconds = 0.0
 
     with app.app_context():
@@ -96,7 +97,13 @@ def audio_processing_thread(app):
 
             try:
                 with sd.InputStream(channels=2, samplerate=SAMPLE_RATE, blocksize=BLOCK_SIZE) as stream:
-                    while not stop_thread and not is_identifying:
+                    # Trying this fix for stats reference from DB
+                    active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
+
+                    while not stop_thread:
+                        if is_identifying:
+                            time.sleep(1)
+                            continue
                         indata, overflow = stream.read(BLOCK_SIZE)
                         
                         # 1. Process Audio
@@ -104,33 +111,43 @@ def audio_processing_thread(app):
                         music_playing = processor.check_music_start(indata, chunk_duration=BLOCK_SIZE/SAMPLE_RATE)
                         rms_volume = processor.calculate_rms(indata)
 
-                        # 2. Auto-Detect Trigger
                         if music_playing:
                             print("🎵 Music start detected! Triggering identification...")
                             threading.Thread(target=identify_and_save, args=(app,)).start()
-                            break 
+                            break
 
-                        # 3. ACCUMULATE IN MEMORY
-                        if music_playing:
+                        # 2. Auto-Detect Trigger
+                        current_track_time = 0.0
+                        if processor.is_playing:
+                            if song_start_time is None:
+                                song_start_time = time.time()
+                                # TODO: Clear history for new song. This is not the appropriate place!
+                                # click_history = []
+                                print("⏱️ Timer Started")
+                            current_track_time = time.time() - song_start_time
+
                             buffer_seconds += (BLOCK_SIZE / SAMPLE_RATE)
-                        
-                        if clicks > 0:
-                            buffer_clicks += clicks
+
+                            if clicks > 0:
+                                event = {
+                                    "time": round(current_track_time, 2),
+                                    "count": clicks
+                                }
+                                click_history.append(event)
+                                print(f"💥 Click detected at {event['time']}s: {clicks}")
 
                         # 4. WRITE TO DB
                         if time.time() - last_commit_time > DB_COMMIT_INTERVAL:
-                            if buffer_seconds > 0 or buffer_clicks > 0:
+                            if buffer_seconds > 0:
                                 try:
                                     active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
                                     
                                     if active_cart:
                                         active_cart.total_hours += (buffer_seconds / 3600.0)
-                                        active_cart.total_clicks += buffer_clicks
                                         
                                         db.session.commit()
                                         print("💾 Stats saved to DB")
 
-                                    buffer_clicks = 0
                                     buffer_seconds = 0.0
                                 except Exception as e:
                                     print(f"⚠️ DB Write Error: {e}")
@@ -139,22 +156,22 @@ def audio_processing_thread(app):
                                     db.session.remove() 
                             
                             last_commit_time = time.time()
-
+                            # Trying this fix for stats reference from DB
+                            active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
                         # TODO: fix stat update
-                        # 5. Emit to Frontend
-                        #socketio.emit('stats_update', {
-                        #    'is_playing': music_playing,
-                        #    'clicks': clicks,
-                        #    'rms': float(rms_volume),
-                        #})
-
+                        # 5. Emit to Frontend (Two emits combined)
                         socketio.emit('stats_update', {
-                            'is_playing': processor.is_playing, 
-                            'clicks': clicks,
-                            'rms': float(rms_volume)#,
-                            #'total_hours': active_cart.total_hours if active_cart else 0,
-                            #'total_clicks': active_cart.total_clicks if active_cart else 0
+                            'is_playing': processor.is_playing,
+                            'rms': float(rms_volume),
+                            'track_time': current_track_time if processor.is_playing else 0,
+                            # TODO: Replace this with proper track duration from the detected song
+                            'track_duration': 180,
+                            'click_history': click_history,
+                            'click_count_now': clicks,
+                            'total_hours': (active_cart.total_hours + (buffer_seconds/3600)) if active_cart else 0
                         })
+
+                        
                         
             except Exception as e:
                 print(f"❌ Stream Error: {e}")
@@ -164,7 +181,8 @@ def audio_processing_thread(app):
 def handle_manual_detect():
     if not is_identifying:
         from flask import current_app
-        threading.Thread(target=audio_processing_thread, args=(current_app._get_current_object())).start()
+        #threading.Thread(target=audio_processing_thread, args=(current_app._get_current_object())).start()
+        audio_processing_thread(current_app._get_current_object())
 
 if __name__ == '__main__':
     # 1. Create the Flask App
