@@ -117,7 +117,7 @@
           <div class="stat-item">
              <span class="stat-label">Audio Signal (RMS)</span>
              <div class="bar-container" style="height: 20px;">
-                <div class="bar-fill" :style="{ width: (currentRMS * 500) + '%', backgroundColor: 'var(--success)' }"></div>
+                <div class="bar-fill" :style="{ width: (currentRMS * 700) + '%' }"></div>
              </div>
           </div>
 
