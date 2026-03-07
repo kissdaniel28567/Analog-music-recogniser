@@ -117,6 +117,10 @@ def audio_processing_thread(app):
                         music_just_started = processor.check_music_start(indata, chunk_duration=BLOCK_SIZE/SAMPLE_RATE)
                         rms_volume = processor.calculate_rms(indata)
 
+                        state.is_playing = processor.is_playing
+                        state.rms = float(rms_volume)
+                        state.current_clicks = clicks
+
                         if music_just_started:
                             print("🎵 Music start detected! Triggering identification...")
 
@@ -200,9 +204,10 @@ def handle_connect():
 
 @socketio.on('manual_detect')
 def handle_manual_detect():
-    print("👤 User requested manual detection")
-    from flask import current_app
-    audio_processing_thread(current_app._get_current_object())
+    if not state.is_identifying:
+        print("👤 User requested manual detection")
+        from flask import current_app
+        audio_processing_thread(current_app._get_current_object())
 
 if __name__ == '__main__':
     app = create_app()
