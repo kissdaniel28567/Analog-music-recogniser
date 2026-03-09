@@ -80,24 +80,34 @@
 
 .vinyl-record {
     position: absolute;
-    top: 2%;
+    top: 2%; 
     right: 0;
     height: 96%;
-    aspect-ratio: 1 / 1;
+    width: calc((100% / 1.5) * 0.96); 
     border-radius: 50%;
     z-index: 5;
     display: flex;
     align-items: center;
     justify-content: center;
-    
-    background: repeating-radial-gradient(
-        #111,
-        #111 4px,
-        #1a1a1a 5px,
-        #111 6px
-    );
+    border: 1px solid rgba(0,0,0,0.8);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    border: 1px solid #000;
+}
+
+/* This ::after pseudo-element places the grooves ON TOP of the color */
+.vinyl-record::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    /* Subtle transparent grooves */
+    background: repeating-radial-gradient(
+        rgba(0,0,0,0) 0px,
+        rgba(0,0,0,0) 4px,
+        rgba(0,0,0,0.15) 5px,
+        rgba(0,0,0,0) 6px
+    );
+    pointer-events: none; /* Allows clicks to pass through */
+    z-index: 1; /* Below the label */
 }
 
 .album-sleeve {
@@ -149,6 +159,116 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.record-label {
+    z-index: 2; 
+}
+
+/* Solids */
+.v-classic { background: #111; }
+.v-bone { background: #e3dac9; }
+.v-ruby { background: #9b111e; opacity: 0.9; }
+.v-canary { background: #ffef00; }
+.v-orange { background: #f56600; opacity: 0.9; }
+.v-electric-blue { background: #0000ff; }
+.v-royal-blue { background: #002366; opacity: 0.9; }
+.v-kelly-green { background: #4cbb17; }
+
+
+.v-rasta-split {
+    background: conic-gradient(#e20613 0 120deg, #f9e514 120deg 240deg, #009640 240deg 360deg);
+}
+
+/* Image-Based Textures */
+.v-galaxy-splash { 
+    background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/asidebside-vinyl.jpg') center/104% no-repeat; 
+}
+.v-blue-eggyoke { 
+    background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/color-in-color-vinyl.jpg') center/102% no-repeat; 
+}
+.v-gold-nugget { 
+    background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/gold-nugget.jpg') center/102% no-repeat; 
+}
+.v-blood-fire { 
+    background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/splatter-vinyl.jpg') center/102% no-repeat; 
+}
+
+/* =========================================
+   CUSTOM CONTEXT MENU
+   ========================================= */
+.custom-context-menu {
+    position: fixed;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--app-radius);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    width: 220px;
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.menu-header {
+    background-color: var(--bg-input);
+    padding: 10px 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.menu-scroll {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.menu-item {
+    padding: 12px 15px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: background 0.1s;
+}
+
+.menu-item:hover {
+    background-color: var(--primary);
+    color: white;
+}
+
+[data-style="retro"] .custom-context-menu {
+    border: 2px outset #fff;
+    border-radius: 0;
+}
+
+[data-style="retro"] .menu-item:hover {
+    background-color: #000080;
+}
+
+/* =========================================
+   EASTER EGG: FIRE POPCORN
+   ========================================= */
+.fire-emoji {
+    position: absolute;
+    font-size: 2rem;
+    z-index: 50;
+    pointer-events: none; /* Can't click the fire */
+    opacity: 0;
+    /* The animation pops them up and fades them out */
+    animation: pop-fire ease-out forwards;
+}
+
+@keyframes pop-fire {
+    0% {
+        transform: scale(0.5) translateY(0);
+        opacity: 1;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5) translateY(-150px) rotate(45deg);
+        opacity: 0;
+    }
 }
 
 .record-label img {
