@@ -158,12 +158,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
 import { useThemeStore } from '../stores/theme';
 import { useDashboard } from '../composables/useDashboard';
+import { useVinylInteractions } from '../composables/useDashboard';
 import '../styles/dashboard.css';
 
-const themeStore = useThemeStore();
+const themeStore = useThemeStore()
 
 const { 
   authStore, showUserMenu, activeTab, isPlaying, isDetecting, 
@@ -172,75 +172,9 @@ const {
   toggleUserMenu, handleLogout, triggerManualDetect 
 } = useDashboard();
 
-// TODO: clean this up after debugging
-const showMenu = ref(false);
-const menuX = ref(0);
-const menuY = ref(0);
-const activeVinylStyle = ref('v-classic'); // Default
-
-const vinylOptions =[
-  { name: 'Classic Black', class: 'v-classic' },
-  { name: 'Bone (Ivory)', class: 'v-bone' },
-  { name: 'Ruby Red', class: 'v-ruby' },
-  { name: 'Opaque Canary Yellow', class: 'v-canary' },
-  { name: 'Orange Crush', class: 'v-orange' },
-  { name: 'Electric Blue', class: 'v-electric-blue' },
-  { name: 'Royal Blue', class: 'v-royal-blue' },
-  { name: 'Kelly Green', class: 'v-kelly-green' },
-  { name: 'Rasta Split', class: 'v-rasta-split' },
-
-  { name: 'Galaxy Splash', class: 'v-galaxy-splash' },
-  { name: 'Blue w/ Eggyoke', class: 'v-blue-eggyoke' },
-  { name: 'Gold Nugget', class: 'v-gold-nugget' },
-  { name: 'Blood Fire', class: 'v-blood-fire' },
-];
-
-const openContextMenu = (e) => {
-  const safeX = Math.min(e.clientX, window.innerWidth - 220); 
-  menuX.value = safeX;
-  menuY.value = e.clientY;
-  showMenu.value = true;
-};
-
-const closeContextMenu = () => {
-  showMenu.value = false;
-};
-
-// --- (POPCORN FIRE) ---
-const clickCount = ref(0);
-let clickTimeout = null;
-const fireEmojis = ref([]);
-let fireId = 0;
-
-const handleContainerClick = (e) => {
-  if (themeStore.styleMode !== 'modern') return;
-
-  clickCount.value++;
-  if (clickTimeout) clearTimeout(clickTimeout);
-  clickTimeout = setTimeout(() => { clickCount.value = 0; }, 400);
-
-  if (clickCount.value >= 5) {
-    triggerPopcorn(e);
-    clickCount.value = 0;
-  }
-};
-
-const triggerPopcorn = (e) => {
-  const container = e.currentTarget.getBoundingClientRect();
-  
-  for (let i = 0; i < 30; i++) {
-    const id = fireId++;
-    fireEmojis.value.push({
-      id: id,
-      x: (Math.random() * container.width),
-      y: (Math.random() * container.height) + 20,
-      scale: 0.8 + (Math.random() * 0.8),
-      duration: 0.6 + (Math.random() * 0.8)
-    });
-
-    setTimeout(() => {
-      fireEmojis.value = fireEmojis.value.filter(f => f.id !== id);
-    }, 1500);
-  }
-};
+const {
+  showMenu, menuX, menuY, activeVinylStyle, vinylOptions,
+  openContextMenu, closeContextMenu,
+  clickCount, fireEmojis, handleContainerClick, triggerPopcorn
+} = useVinylInteractions(themeStore);
 </script>
