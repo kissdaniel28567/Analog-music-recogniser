@@ -172,6 +172,7 @@ const {
   toggleUserMenu, handleLogout, triggerManualDetect 
 } = useDashboard();
 
+// TODO: clean this up after debugging
 const showMenu = ref(false);
 const menuX = ref(0);
 const menuY = ref(0);
