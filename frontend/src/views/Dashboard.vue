@@ -24,10 +24,22 @@
       <!-- LEFT: PLAYER -->
       <section class="panel left-panel">
         <div class="visualizer-wrapper">
-          <!-- Added Album Art Support -->
-          <div class="vinyl-record" :class="{ spinning: isPlaying || isDetecting }">
-            <img v-if="currentTrack.cover" :src="currentTrack.cover" class="album-art-overlay" />
-            <div class="label"></div>
+          <div class="vinyl-container">
+            
+            <!-- 1. The Album Sleeve (On Top) -->
+            <div class="album-sleeve">
+              <img v-if="currentTrack.cover" :src="currentTrack.cover" class="sleeve-art" />
+              <div v-else class="sleeve-placeholder">🎵</div>
+            </div>
+
+            <!-- 2. The Vinyl Record (Tucked Underneath, Peeking Right) -->
+            <div class="vinyl-record" :class="{ spinning: isPlaying || isDetecting }">
+              <div class="record-label">
+                 <!-- Put a tiny version of the cover on the record label too! -->
+                 <img v-if="currentTrack.cover" :src="currentTrack.cover" />
+              </div>
+            </div>
+
           </div>
         </div>
 
