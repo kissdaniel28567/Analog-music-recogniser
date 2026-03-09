@@ -20,7 +20,6 @@ export function useDashboard() {
     const trackDuration = ref(180);
     const clickHistory = ref([]);
 
-    const hasAutoDetected = ref(false);
     let socket = null;
 
     const toggleUserMenu = () => {
@@ -34,8 +33,9 @@ export function useDashboard() {
 
     const triggerManualDetect = () => {
         if (isDetecting.value) return;
-        console.log("🚀 Requesting detection...");
+        console.log("🚀 Manual detection requested...");
         if (socket) socket.emit('manual_detect');
+        // server should change this in next iter. Might need to delete this
         isDetecting.value = true;
     };
 
@@ -46,41 +46,33 @@ export function useDashboard() {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // --- LIFECYCLE (Will remove after debugging) ---
     onMounted(() => {
         socket = io('http://localhost:5000');
 
         // 1. LIVE STATS
         socket.on('stats_update', (data) => {
+            // Basic stats
             isPlaying.value = !!data.is_playing;
-            totalClicks.value = data.clicks || 0;
             currentRMS.value = data.rms || 0;
             hoursPlayed.value = data.total_hours || 0;
-            trackTime.value = data.track_time || 0;
-            clickHistory.value = data.click_history || [];
-            currentClicks.value = data.click_count_now || 0;
-            trackTime.value = data.track_time || 0;
 
-            // DEBUG LINE FOR
-            console.log("DEBUG: RMS: " + currentRMS.value);
-            
-
+            // Track info
+            trackTime.value = data.track_time || 0;
             // TODO: This may not work when backend sends proper track length
-            if (data.track_duration) {
-                trackDuration.value = data.track_duration;
-            }
+            if (data.track_duration) trackDuration.value = data.track_duration;
 
+            // Clicks
+            currentClicks.value = data.click_count_now || 0;
+            clickHistory.value = data.click_history || [];
             totalClicks.value = clickHistory.value.reduce((sum, item) => sum + item.count, 0);
             
-            // TODO: POLISH THIS Auto-detect Logic
-            if (data.is_playing) {
-                if (!isDetecting.value && !currentTrack.value.title && !hasAutoDetected.value) {
-                    console.log("🎵 Music detected on load/start! Auto-detecting...");
-                    triggerManualDetect();
-                    hasAutoDetected.value = true;
-                }
-            } else {
-                hasAutoDetected.value = false;
+            // TODO: might not need this in the future
+            trackTime.value = data.track_time || 0;
+            
+            if (data.current_track && data.current_track.title) {
+                currentTrack.value = data.current_track;
+            } else if (!isDetecting.value) {
+                // TODO: Clear data if we are not busy looking for it
             }
         });
 
@@ -97,9 +89,6 @@ export function useDashboard() {
         socket.on('track_identified', (match) => {
             if (match) {
                 currentTrack.value = match;
-                isPlaying.value = true;
-            } else {
-                console.log("Detection finished, no match found.");
             }
             isDetecting.value = false;
         });
