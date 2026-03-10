@@ -6,8 +6,13 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
+
+    rms_threshold = db.Column(db.Float, default=0.01)
+    click_sensitivity = db.Column(db.Float, default=15.0)
+    audio_device_id = db.Column(db.Integer, nullable=True)
     
     cartridges = db.relationship('Cartridge', backref='owner', lazy=True)
+    track_history = db.relationship('TrackHistory', backref='listener', lazy=True)
 
 class Cartridge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
