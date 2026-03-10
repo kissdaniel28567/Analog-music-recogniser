@@ -106,15 +106,25 @@ def audio_processing_thread(app):
                 with sd.InputStream(channels=2, samplerate=SAMPLE_RATE, blocksize=BLOCK_SIZE) as stream:
                     active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
 
-                    while not state.stop_thread and not state.is_identifying:
-                        #if state.is_identifying:
-                        #    time.sleep(1)
-                        #    continue
+                    while not state.stop_thread:
+                        if state.is_identifying:
+                            time.sleep(1)
+                            continue
                         indata, overflow = stream.read(BLOCK_SIZE)
                         
+                        current_rms_threshold = 0.01
+                        current_click_sensitivity = 15.0
+                        
+                        if active_cart and active_cart.owner:
+                            # Use the settings of the user who owns the active cartridge
+                            current_rms_threshold = active_cart.owner.rms_threshold
+                            current_click_sensitivity = active_cart.owner.click_sensitivity
+
                         # 1. Process Audio
-                        clicks = processor.detect_clicks(indata)
-                        music_just_started = processor.check_music_start(indata, chunk_duration=BLOCK_SIZE/SAMPLE_RATE)
+                        clicks = processor.detect_clicks(indata, sensitivity=current_click_sensitivity)
+                        music_just_started = processor.check_music_start(
+                            indata, chunk_duration=BLOCK_SIZE/SAMPLE_RATE,
+                            threshold=current_rms_threshold)
                         rms_volume = processor.calculate_rms(indata)
 
                         state.is_playing = processor.is_playing
