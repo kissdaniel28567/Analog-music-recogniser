@@ -24,7 +24,7 @@
       <!-- LEFT: PLAYER -->
       <section class="panel left-panel">
         <div class="visualizer-wrapper">
-          <div class="vinyl-container"
+          <div class="vinyl-container no-select"
             @contextmenu.prevent="openContextMenu"
             @click="handleContainerClick">
             
