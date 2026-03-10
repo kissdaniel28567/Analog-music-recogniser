@@ -44,6 +44,7 @@ def identify_and_save(app, device_id=None):
         result = asyncio.run(service.identify_audio(temp_file))
         
         # 4. Process Result
+        found_match = False
         if len(result.get('matches', [])) > 0:
             track = result.get('track', {})
             state.current_track = {
