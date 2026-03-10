@@ -8,12 +8,9 @@
         <span style="font-weight: bold; margin-left: 10px;">Smart Turntable</span>
       </div>
       
-      <div class="user-menu" @click="toggleUserMenu">
+      <div class="user-menu" @click="router.push('/profile')" style="cursor: pointer;" title="Go to Profile">
         <div class="avatar-circle">
           {{ authStore.user ? 'U' : '?' }}
-        </div>
-        <div v-if="showUserMenu" class="dropdown-menu">
-          <div class="dropdown-item danger" @click="handleLogout">Logout</div>
         </div>
       </div>
     </header>
@@ -166,7 +163,7 @@ import '../styles/dashboard.css';
 const themeStore = useThemeStore()
 
 const { 
-  authStore, showUserMenu, activeTab, isPlaying, isDetecting, 
+  authStore, showUserMenu, router, activeTab, isPlaying, isDetecting, 
   hoursPlayed, totalClicks, currentClicks, currentRMS, currentTrack,
   trackTime, clickHistory, trackDuration, formatTime,
   toggleUserMenu, handleLogout, triggerManualDetect 
