@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard-container">
+  <div class="dashboard-container" @click="closeContextMenu">
     
     <!-- HEADER -->
     <header class="top-nav">
@@ -24,10 +24,29 @@
       <!-- LEFT: PLAYER -->
       <section class="panel left-panel">
         <div class="visualizer-wrapper">
-          <!-- Added Album Art Support -->
-          <div class="vinyl-record" :class="{ spinning: isPlaying || isDetecting }">
-            <img v-if="currentTrack.cover" :src="currentTrack.cover" class="album-art-overlay" />
-            <div class="label"></div>
+          <div class="vinyl-container no-select"
+            @contextmenu.prevent="openContextMenu"
+            @click="handleContainerClick">
+            
+            <!-- 1. The Album Sleeve (On Top) -->
+            <div class="album-sleeve">
+              <img v-if="currentTrack.cover" :src="currentTrack.cover" class="sleeve-art" />
+              <div v-else class="sleeve-placeholder">🎵</div>
+            </div>
+
+            <!-- 2. The Vinyl Record (Tucked Underneath, Peeking Right) -->
+            <div class="vinyl-record" :class="[{ spinning: isPlaying || isDetecting }, activeVinylStyle]">
+              <div class="record-label">
+                 <!-- Put a tiny version of the cover on the record label too! -->
+                 <img v-if="currentTrack.cover" :src="currentTrack.cover" />
+              </div>
+            </div>
+
+            <div v-for="fire in fireEmojis" :key="fire.id" class="fire-emoji"
+                 :style="{ left: fire.x + 'px', top: fire.y + 'px', transform: `scale(${fire.scale})`, animationDuration: `${fire.duration}s` }">
+              🔥
+            </div>
+
           </div>
         </div>
 
@@ -125,12 +144,26 @@
 
       </section>
     </main>
+
+    <div v-if="showMenu" class="custom-context-menu" :style="{ left: menuX + 'px', top: menuY + 'px' }">
+      <div class="menu-header">Select Vinyl Style</div>
+      <div class="menu-scroll">
+        <div v-for="style in vinylOptions" :key="style.class" class="menu-item" @click="activeVinylStyle = style.class">
+          {{ style.name }}
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
+import { useThemeStore } from '../stores/theme';
 import { useDashboard } from '../composables/useDashboard';
+import { useVinylInteractions } from '../composables/useDashboard';
 import '../styles/dashboard.css';
+
+const themeStore = useThemeStore()
 
 const { 
   authStore, showUserMenu, activeTab, isPlaying, isDetecting, 
@@ -138,4 +171,10 @@ const {
   trackTime, clickHistory, trackDuration, formatTime,
   toggleUserMenu, handleLogout, triggerManualDetect 
 } = useDashboard();
+
+const {
+  showMenu, menuX, menuY, activeVinylStyle, vinylOptions,
+  openContextMenu, closeContextMenu,
+  clickCount, fireEmojis, handleContainerClick, triggerPopcorn
+} = useVinylInteractions(themeStore);
 </script>
