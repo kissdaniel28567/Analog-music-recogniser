@@ -101,6 +101,7 @@ export function useDashboard() {
     return {
         authStore,
         showUserMenu,
+        router,
         activeTab,
         isPlaying,
         isDetecting,

@@ -24,5 +24,14 @@ export default {
     },
     setActiveCartridge(id) {
         return apiClient.post('/api/cartridges/set_active', { cartridge_id: id });
+    },
+    getProfile() {
+        return apiClient.get('/api/user/profile');
+    },
+    updateSettings(settingsData) {
+        return apiClient.post('/api/user/settings', settingsData);
+    },
+    getAudioDevices() {
+        return apiClient.get('/api/user/devices');
     }
 };
