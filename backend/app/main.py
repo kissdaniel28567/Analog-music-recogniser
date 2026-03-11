@@ -72,25 +72,33 @@ def identify_and_save(app, device_id=None):
                     'cover' : track.get('images', {}).get('coverart')
                 }
                 
-                try:
-                    search_term = f"{state.current_track['artist']} {state.current_track['title']}"
-                    safe_query = urllib.parse.quote(search_term)
-                    url = f"https://itunes.apple.com/search?term={safe_query}&entity=song&limit=1"
+                state.track_duration = 210.0
 
-                    req = urllib.request.Request(url, headers={'User-Agent': 'SmartTurntable/1.0'})
-                    with urllib.request.urlopen(req, timeout=5) as response:
-                        itunes_data = json.loads(response.read().decode())
-
-                        if itunes_data['resultCount'] > 0:
-                            duration_ms = itunes_data['results'][0]['trackTimeMillis']
-                            state.track_duration = duration_ms / 1000.0
-                            print(f"⏱️ Exact duration found: {state.track_duration} seconds")
-                        else:
-                            print("⚠️ iTunes didn't find the song, using fallback.")
-                            state.track_duration = 210
-                except Exception as e:
-                    print(f"⚠️ Duration API lookup failed: {e}")
-                    state.track_duration = 210 
+                apple_music_id = None
+                hub = track.get('hub', {})
+                for action in hub.get('actions',[]):
+                    if action.get('type') == 'applemusicplay' and 'id' in action:
+                        apple_music_id = action['id']
+                        break
+            
+                if apple_music_id:
+                    try:
+                        url = f"https://itunes.apple.com/lookup?id={apple_music_id}"
+                        req = urllib.request.Request(url, headers={'User-Agent': 'SmartTurntable/1.0'})
+                        
+                        with urllib.request.urlopen(req, timeout=5) as response:
+                            itunes_data = json.loads(response.read().decode())
+                            
+                            if itunes_data['resultCount'] > 0:
+                                duration_ms = itunes_data['results'][0]['trackTimeMillis']
+                                state.track_duration = duration_ms / 1000.0
+                                print(f"⏱️ Exact duration found via Apple ID: {state.track_duration}s")
+                            else:
+                                print("⚠️ ID lookup returned no duration, using 210s fallback.")
+                    except Exception as e:
+                        print(f"⚠️ API lookup failed: {e}")
+                else:
+                    print("⚠️ No Apple Music ID in Shazam data, using 210s fallback.")
 
                 state.failed_attempts = 0
                 found_match = True
