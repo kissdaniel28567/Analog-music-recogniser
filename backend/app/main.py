@@ -205,7 +205,7 @@ def audio_processing_thread(app):
                                     indata, 
                                     threshold=current_rms_threshold, 
                                     # TODO: Adjust this if needed, default is 2 secs
-                                    required_duration=2.0,
+                                    required_duration=1.0,
                                     chunk_duration=BLOCK_SIZE/SAMPLE_RATE
                                 )
                                 
@@ -272,8 +272,8 @@ def handle_connect():
 def handle_manual_detect():
     if not state.is_identifying:
         print("👤 User requested manual detection")
-        from flask import current_app
-        audio_processing_thread(current_app._get_current_object())
+        # We need the actual app instance for the database context in the thread
+        threading.Thread(target=identify_and_save, args=(app,)).start()
 
 if __name__ == '__main__':
     app = create_app()
