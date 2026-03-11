@@ -20,7 +20,8 @@ class GlobalState:
     current_clicks = 0
     
     stop_thread = False
-    failed_attempt = 0
+    failed_attempts = 0
+    track_duration = 180
 
 state = GlobalState()
 
@@ -48,16 +49,26 @@ def identify_and_save(app, device_id=None):
         found_match = False
         if len(result.get('matches', [])) > 0:
             track = result.get('track', {})
-            state.current_track = {
-                'title' : track.get('title'),
-                'artist' : track.get('subtitle'),
-                'cover' : track.get('images', {}).get('coverart')
-            }
-            found_match = True
-            print(f"✅ Match: {state.current_track['title']} by {state.current_track['artist']}")
+            new_title = track.get('title')
+
+            if state.current_track['title'] == new_title and state.failed_attempts < 5:
+                print(f"⚠️ Detected the same song again: {new_title}. Retrying...")
+                state.failed_attempts += 1
+                found_match = False
+            else:
+                state.current_track = {
+                    'title' : track.get('title'),
+                    'artist' : track.get('subtitle'),
+                    'cover' : track.get('images', {}).get('coverart')
+                }
+                
+                state.track_duration = 210
+
+                state.failed_attempts = 0
+                found_match = True
+                print(f"✅ Match: {state.current_track['title']} by {state.current_track['artist']}")
 
             # 5. Save to Database
-            # TODO: Map to user
             with app.app_context():
                 try:
                     history = TrackHistory(
@@ -74,7 +85,7 @@ def identify_and_save(app, device_id=None):
         else:
             print("❌ No match found")
             state.current_track = {'title': '', 'artist': '', 'cover': None}
-            state.failed_attempt += 1
+            state.failed_attempts += 1
 
     # 6. Send to Frontend
     state.is_identifying = False
@@ -153,8 +164,7 @@ def audio_processing_thread(app):
                         if state.is_playing:
                             if state.song_start_time is None:
                                 state.song_start_time = time.time()
-                                # TODO: Clear history for new song. This is not the appropriate place!
-                                # click_history = []
+                                state.click_history = []
                                 print("⏱️ Timer Started")
                             current_track_time = time.time() - state.song_start_time
                             buffer_seconds += (BLOCK_SIZE / SAMPLE_RATE)
@@ -167,6 +177,25 @@ def audio_processing_thread(app):
                                 state.click_history.append(event)
                                 print(f"💥 Click detected at {event['time']}s: {clicks}")
 
+                            time_left = state.track_duration - current_track_time
+
+                            if time_left <= 5.0:
+                                silence_detected = processor.check_silence_start(
+                                    indata, 
+                                    threshold=current_rms_threshold, 
+                                    # TODO: Adjust this if needed, default is 2 secs
+                                    required_duration=2.0,
+                                    chunk_duration=BLOCK_SIZE/SAMPLE_RATE
+                                )
+                                
+                                if silence_detected:
+                                    print("🛑 Silence detected at end of track! Resetting for next song...")
+                                    state.is_playing = False
+                                    state.song_start_time = None
+                                    state.current_track = {'title': '', 'artist': '', 'cover': None}
+                                    state.failed_attempts = 0
+                                    state.click_history =[]
+                                    processor.is_playing = False
                         # 4. WRITE TO DB
                         if time.time() - last_commit_time > DB_COMMIT_INTERVAL:
                             if buffer_seconds > 0:
@@ -191,8 +220,7 @@ def audio_processing_thread(app):
                             'is_playing': state.is_playing,
                             'rms': state.rms,
                             'track_time': current_track_time,
-                            # TODO: Replace this with proper track duration from the detected song
-                            'track_duration': 180,
+                            'track_duration': state.track_duration,
                             'click_history': state.click_history,
                             'click_count_now': state.current_clicks,
                             'current_track': state.current_track,
