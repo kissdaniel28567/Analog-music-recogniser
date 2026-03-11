@@ -65,7 +65,6 @@ def identify_and_save(app, device_id=None):
                     state.failed_attempts += 1
                     found_match = False
             else:
-                print(f"{state.current_track['title']} == {new_title}")
                 state.current_track = {
                     'title' : track.get('title'),
                     'artist' : track.get('subtitle'),
@@ -181,8 +180,7 @@ def audio_processing_thread(app):
                         state.rms = float(rms_volume)
                         state.current_clicks = clicks
 
-                        needs_retry = (state.is_playing 
-                                       and not state.current_track['title'] 
+                        needs_retry = (state.is_playing
                                        and 0 < state.failed_attempts < 5)
                         
                         if music_just_started or needs_retry:
