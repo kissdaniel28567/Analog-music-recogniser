@@ -20,6 +20,7 @@ class GlobalState:
     current_clicks = 0
     
     stop_thread = False
+    failed_attempt = 0
 
 state = GlobalState()
 
@@ -73,6 +74,7 @@ def identify_and_save(app, device_id=None):
         else:
             print("❌ No match found")
             state.current_track = {'title': '', 'artist': '', 'cover': None}
+            state.failed_attempt += 1
 
     # 6. Send to Frontend
     state.is_identifying = False
@@ -132,7 +134,11 @@ def audio_processing_thread(app):
                         state.rms = float(rms_volume)
                         state.current_clicks = clicks
 
-                        if music_just_started:
+                        needs_retry = (state.is_playing 
+                                       and not state.current_track['title'] 
+                                       and 0 < state.failed_attempts < 5)
+                        
+                        if music_just_started or needs_retry:
                             print("🎵 Music start detected! Triggering identification...")
 
                             state.current_track = {'title': '', 'artist': '', 'cover': None}

@@ -119,7 +119,7 @@ class AudioProcessor:
             float: Total spectral energy in the 10–50 Hz band.
         """
 
-        fft_spectrum = np.fft.rfft(indata[:, 0]) # Analyze left channel
+        fft_spectrum = np.fft.rfft(indata[:, 0])
         frequencies = np.fft.rfftfreq(len(indata), d=1/self.sample_rate)
         
         idx_low = np.argmax(frequencies > 10)
