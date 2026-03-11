@@ -112,7 +112,7 @@ def identify_and_save(app, device_id=None):
                     db.session.remove()
         else:
             print("❌ No match found")
-            state.current_track = {'title': '', 'artist': '', 'cover': None}
+            #state.current_track = {'title': '', 'artist': '', 'cover': None}
             state.failed_attempts += 1
 
     # 6. Send to Frontend
@@ -221,7 +221,7 @@ def audio_processing_thread(app):
                                     print("🛑 Silence detected at end of track! Resetting for next song...")
                                     state.is_playing = False
                                     state.song_start_time = None
-                                    state.current_track = {'title': '', 'artist': '', 'cover': None}
+                                    #state.current_track = {'title': '', 'artist': '', 'cover': None}
                                     state.failed_attempts = 0
                                     state.click_history =[]
                                     processor.is_playing = False
