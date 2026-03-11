@@ -25,6 +25,7 @@ class GlobalState:
     stop_thread = False
     failed_attempts = 0
     track_duration = 180
+    isUserdetect = False
 
 state = GlobalState()
 
@@ -55,10 +56,16 @@ def identify_and_save(app, device_id=None):
             new_title = track.get('title')
 
             if state.current_track['title'] == new_title and state.failed_attempts < 5:
-                print(f"⚠️ Detected the same song again: {new_title}. Retrying...")
-                state.failed_attempts += 1
-                found_match = False
+                if state.isUserdetect:
+                    # TODO: emmit something like this
+                    message = f"⚠️ Detected the same song again: {new_title}. If you think this is worng press detect again"
+                    socketio.emit('info', message)
+                else:
+                    print(f"⚠️ Detected the same song again: {new_title}. Retrying...")
+                    state.failed_attempts += 1
+                    found_match = False
             else:
+                print(f"{state.current_track['title']} == {new_title}")
                 state.current_track = {
                     'title' : track.get('title'),
                     'artist' : track.get('subtitle'),
@@ -173,10 +180,12 @@ def audio_processing_thread(app):
                         if music_just_started or needs_retry:
                             print("🎵 Music start detected! Triggering identification...")
 
-                            state.current_track = {'title': '', 'artist': '', 'cover': None}
+                            # This is why we cannot detect once we redetect the same music
+                            #state.current_track = {'title': '', 'artist': '', 'cover': None}
                             state.song_start_time = time.time()
                             state.click_history = []
 
+                            state.isUserdetect = False
                             threading.Thread(target=identify_and_save, args=(app,)).start()
                             break
 
@@ -185,7 +194,6 @@ def audio_processing_thread(app):
                         if state.is_playing:
                             if state.song_start_time is None:
                                 state.song_start_time = time.time()
-                                state.click_history = []
                                 print("⏱️ Timer Started")
                             current_track_time = time.time() - state.song_start_time
                             buffer_seconds += (BLOCK_SIZE / SAMPLE_RATE)
@@ -272,7 +280,8 @@ def handle_connect():
 def handle_manual_detect():
     if not state.is_identifying:
         print("👤 User requested manual detection")
-        # We need the actual app instance for the database context in the thread
+        
+        state.isUserdetect = True
         threading.Thread(target=identify_and_save, args=(app,)).start()
 
 if __name__ == '__main__':
