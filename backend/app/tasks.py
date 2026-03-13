@@ -7,7 +7,7 @@ import urllib.parse
 import json
 
 from .extensions import db, socketio
-from .models import Cartridge, TrackHistory
+from .models import Cartridge, TrackHistory, AlbumColor
 from .audio.capture import AudioCapture
 from .audio.processing import AudioProcessor
 from .services.recognition_service import RecognitionService
@@ -53,8 +53,21 @@ def identify_and_save(app, device_id=None):
                 state.current_track = {
                     'title' : track.get('title'),
                     'artist' : track.get('subtitle'),
-                    'cover' : track.get('images', {}).get('coverart')
+                    'cover' : track.get('images', {}).get('coverart'),
+                    'color' : 'v-classic'
                 }
+
+                active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
+                if active_cart and active_cart.owner:
+                        saved_color_record = AlbumColor.query.filter_by(
+                            user_id=active_cart.owner.id,
+                            artist=state.current_track['artist'],
+                            title=state.current_track['title']
+                        ).first()
+                        
+                        if saved_color_record:
+                            state.current_track['color'] = saved_color_record.color_class
+                            print(f"🎨 Loaded saved vinyl color: {saved_color_record.color_class}")
 
                 # TODO: Might need to reset something else too
                 if state.is_userdetect and state.temp_start_time is not None:
