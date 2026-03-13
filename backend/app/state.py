@@ -1,0 +1,17 @@
+class GlobalState:
+    is_playing = False
+    is_identifying = False
+    current_track = {'title': '', 'artist': '', 'cover': None}
+    song_start_time = None
+    click_history = []
+    
+    rms = 0.0
+    current_clicks = 0
+    
+    stop_thread = False
+    failed_attempts = 0
+    track_duration = 180
+    isUserdetect = False
+    is_paused = False
+
+state = GlobalState()
