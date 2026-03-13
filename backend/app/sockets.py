@@ -26,6 +26,7 @@ def handle_connect():
 def handle_manual_detect():
     if not state.is_identifying:
         print("👤 User requested manual detection")
-        state.isUserdetect = True
+        state.is_userdetect = True
+        state.temp_start_time = time.time()
         app = current_app._get_current_object()
         threading.Thread(target=identify_and_save, args=(app,)).start()
