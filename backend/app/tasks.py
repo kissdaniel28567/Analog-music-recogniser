@@ -41,7 +41,7 @@ def identify_and_save(app, device_id=None):
             new_title = track.get('title')
 
             if state.current_track['title'] == new_title and state.failed_attempts < 5:
-                if state.isUserdetect:
+                if state.is_userdetect:
                     # TODO: emmit something like this
                     message = f"⚠️ Detected the same song again: {new_title}. If you think this is worng press detect again"
                     socketio.emit('info', message)
@@ -55,6 +55,11 @@ def identify_and_save(app, device_id=None):
                     'artist' : track.get('subtitle'),
                     'cover' : track.get('images', {}).get('coverart')
                 }
+
+                # TODO: Might need to reset something else too
+                if state.is_userdetect and state.temp_start_time is not None:
+                    state.song_start_time = state.temp_start_time
+                    state.click_history = []
                 
                 state.track_duration = 210.0
 
@@ -104,7 +109,6 @@ def identify_and_save(app, device_id=None):
                     db.session.remove()
         else:
             print("❌ No match found")
-            #state.current_track = {'title': '', 'artist': '', 'cover': None}
             state.failed_attempts += 1
 
     # 6. Send to Frontend
@@ -150,7 +154,6 @@ def audio_processing_thread(app):
                         current_click_sensitivity = 15.0
                         
                         if active_cart and active_cart.owner:
-                            # Use the settings of the user who owns the active cartridge
                             current_rms_threshold = active_cart.owner.rms_threshold
                             current_click_sensitivity = active_cart.owner.click_sensitivity
 
@@ -170,13 +173,10 @@ def audio_processing_thread(app):
                         
                         if music_just_started or needs_retry:
                             print("🎵 Music start detected! Triggering identification...")
-
-                            # This is why we cannot detect once we redetect the same music
-                            #state.current_track = {'title': '', 'artist': '', 'cover': None}
                             state.song_start_time = time.time()
                             state.click_history = []
 
-                            state.isUserdetect = False
+                            state.is_userdetect = False
                             threading.Thread(target=identify_and_save, args=(app,)).start()
                             break
 
@@ -211,7 +211,6 @@ def audio_processing_thread(app):
                                     print("🛑 Silence detected at end of track! Resetting for next song...")
                                     state.is_playing = False
                                     state.song_start_time = None
-                                    #state.current_track = {'title': '', 'artist': '', 'cover': None}
                                     state.failed_attempts = 0
                                     state.click_history =[]
                                     processor.is_playing = False

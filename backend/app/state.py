@@ -11,7 +11,8 @@ class GlobalState:
     stop_thread = False
     failed_attempts = 0
     track_duration = 180
-    isUserdetect = False
+    is_userdetect = False
     is_paused = False
+    temp_start_time = None
 
 state = GlobalState()
