@@ -146,7 +146,7 @@
     <div v-if="showMenu" class="custom-context-menu" :style="{ left: menuX + 'px', top: menuY + 'px' }">
       <div class="menu-header">Select Vinyl Style</div>
       <div class="menu-scroll">
-        <div v-for="style in vinylOptions" :key="style.class" class="menu-item" @click="activeVinylStyle = style.class">
+        <div v-for="style in vinylOptions" :key="style.class" class="menu-item" @click="setVinylColor(style.class); closeContextMenu()">
           {{ style.name }}
         </div>
       </div>
