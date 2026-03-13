@@ -6,6 +6,7 @@ class AudioProcessor:
         
         self.consecutive_loud_duration = 0
         self.is_playing = False
+        self.track_end_silence_duration = 0
         
     def calculate_rms(self, indata):
         """
@@ -39,6 +40,24 @@ class AudioProcessor:
             
         if not self.is_playing and self.consecutive_loud_duration >= required_duration:
             self.is_playing = True
+            return True
+            
+        return False
+    
+    def check_silence_start(self, indata, threshold=0.01, required_duration=2.0, chunk_duration=0.1):
+        """
+        The reverse of check_music_start. 
+        Looks for sustained silence to detect the gap between songs.
+        """
+        rms = self.calculate_rms(indata)
+        
+        if rms < threshold:
+            self.track_end_silence_duration += chunk_duration
+        else:
+            self.track_end_silence_duration = 0
+
+        if self.track_end_silence_duration >= required_duration:
+            self.track_end_silence_duration = 0
             return True
             
         return False
@@ -119,7 +138,7 @@ class AudioProcessor:
             float: Total spectral energy in the 10–50 Hz band.
         """
 
-        fft_spectrum = np.fft.rfft(indata[:, 0]) # Analyze left channel
+        fft_spectrum = np.fft.rfft(indata[:, 0])
         frequencies = np.fft.rfftfreq(len(indata), d=1/self.sample_rate)
         
         idx_low = np.argmax(frequencies > 10)

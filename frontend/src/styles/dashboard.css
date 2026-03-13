@@ -440,6 +440,32 @@
     transition: width 0.1s linear;
 }
 
+/* =========================================
+   STATE ANIMATIONS
+   ========================================= */
+
+@keyframes slow-pulse {
+    0% { 
+        opacity: 1; 
+        transform: scale(1); 
+    }
+    50% { 
+        opacity: 0.6; 
+        transform: scale(0.96);
+    }
+    100% { 
+        opacity: 1; 
+        transform: scale(1); 
+    }
+}
+
+/* We apply this to the whole container when paused */
+.paused-pulse {
+    animation: slow-pulse 2.5s infinite ease-in-out;
+    /* Optional: Pause the spin animation of the record inside it */
+    /* pointer-events: none; */ 
+}
+
 /* --- RESPONSIVE --- */
 @media (max-width: 900px) {
     .main-grid {

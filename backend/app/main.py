@@ -2,6 +2,9 @@ import threading
 import time
 import sounddevice as sd
 import asyncio
+import urllib.request
+import urllib.parse
+import json
 from .extensions import db, socketio
 from .models import Cartridge, TrackHistory, User
 from .audio.capture import AudioCapture
@@ -20,6 +23,10 @@ class GlobalState:
     current_clicks = 0
     
     stop_thread = False
+    failed_attempts = 0
+    track_duration = 180
+    isUserdetect = False
+    is_paused = False
 
 state = GlobalState()
 
@@ -44,18 +51,60 @@ def identify_and_save(app, device_id=None):
         result = asyncio.run(service.identify_audio(temp_file))
         
         # 4. Process Result
+        found_match = False
         if len(result.get('matches', [])) > 0:
             track = result.get('track', {})
-            state.current_track = {
-                'title' : track.get('title'),
-                'artist' : track.get('subtitle'),
-                'cover' : track.get('images', {}).get('coverart')
-            }
-            found_match = True
-            print(f"✅ Match: {state.current_track['title']} by {state.current_track['artist']}")
+            new_title = track.get('title')
+
+            if state.current_track['title'] == new_title and state.failed_attempts < 5:
+                if state.isUserdetect:
+                    # TODO: emmit something like this
+                    message = f"⚠️ Detected the same song again: {new_title}. If you think this is worng press detect again"
+                    socketio.emit('info', message)
+                else:
+                    print(f"⚠️ Detected the same song again: {new_title}. Retrying...")
+                    state.failed_attempts += 1
+                    found_match = False
+            else:
+                state.current_track = {
+                    'title' : track.get('title'),
+                    'artist' : track.get('subtitle'),
+                    'cover' : track.get('images', {}).get('coverart')
+                }
+                
+                state.track_duration = 210.0
+
+                apple_music_id = None
+                hub = track.get('hub', {})
+                for action in hub.get('actions',[]):
+                    if action.get('type') == 'applemusicplay' and 'id' in action:
+                        apple_music_id = action['id']
+                        break
+            
+                if apple_music_id:
+                    try:
+                        url = f"https://itunes.apple.com/lookup?id={apple_music_id}"
+                        req = urllib.request.Request(url, headers={'User-Agent': 'SmartTurntable/1.0'})
+                        
+                        with urllib.request.urlopen(req, timeout=5) as response:
+                            itunes_data = json.loads(response.read().decode())
+                            
+                            if itunes_data['resultCount'] > 0:
+                                duration_ms = itunes_data['results'][0]['trackTimeMillis']
+                                state.track_duration = duration_ms / 1000.0
+                                print(f"⏱️ Exact duration found via Apple ID: {state.track_duration}s")
+                            else:
+                                print("⚠️ ID lookup returned no duration, using 210s fallback.")
+                    except Exception as e:
+                        print(f"⚠️ API lookup failed: {e}")
+                else:
+                    print("⚠️ No Apple Music ID in Shazam data, using 210s fallback.")
+
+                state.failed_attempts = 0
+                found_match = True
+                print(f"✅ Match: {state.current_track['title']} by {state.current_track['artist']}")
 
             # 5. Save to Database
-            # TODO: Map to user
             with app.app_context():
                 try:
                     history = TrackHistory(
@@ -71,7 +120,8 @@ def identify_and_save(app, device_id=None):
                     db.session.remove()
         else:
             print("❌ No match found")
-            state.current_track = {'title': '', 'artist': '', 'cover': None}
+            #state.current_track = {'title': '', 'artist': '', 'cover': None}
+            state.failed_attempts += 1
 
     # 6. Send to Frontend
     state.is_identifying = False
@@ -131,13 +181,18 @@ def audio_processing_thread(app):
                         state.rms = float(rms_volume)
                         state.current_clicks = clicks
 
-                        if music_just_started:
+                        needs_retry = (state.is_playing
+                                       and 0 < state.failed_attempts < 5)
+                        
+                        if music_just_started or needs_retry:
                             print("🎵 Music start detected! Triggering identification...")
 
-                            state.current_track = {'title': '', 'artist': '', 'cover': None}
+                            # This is why we cannot detect once we redetect the same music
+                            #state.current_track = {'title': '', 'artist': '', 'cover': None}
                             state.song_start_time = time.time()
                             state.click_history = []
 
+                            state.isUserdetect = False
                             threading.Thread(target=identify_and_save, args=(app,)).start()
                             break
 
@@ -146,8 +201,6 @@ def audio_processing_thread(app):
                         if state.is_playing:
                             if state.song_start_time is None:
                                 state.song_start_time = time.time()
-                                # TODO: Clear history for new song. This is not the appropriate place!
-                                # click_history = []
                                 print("⏱️ Timer Started")
                             current_track_time = time.time() - state.song_start_time
                             buffer_seconds += (BLOCK_SIZE / SAMPLE_RATE)
@@ -160,6 +213,43 @@ def audio_processing_thread(app):
                                 state.click_history.append(event)
                                 print(f"💥 Click detected at {event['time']}s: {clicks}")
 
+                            time_left = state.track_duration - current_track_time
+
+                            if time_left <= 5.0:
+                                silence_detected = processor.check_silence_start(
+                                    indata, 
+                                    threshold=current_rms_threshold, 
+                                    required_duration=1.0,
+                                    chunk_duration=BLOCK_SIZE/SAMPLE_RATE
+                                )
+                                
+                                if silence_detected:
+                                    print("🛑 Silence detected at end of track! Resetting for next song...")
+                                    state.is_playing = False
+                                    state.song_start_time = None
+                                    #state.current_track = {'title': '', 'artist': '', 'cover': None}
+                                    state.failed_attempts = 0
+                                    state.click_history =[]
+                                    processor.is_playing = False
+
+                            stop_detected = processor.check_silence_start(
+                                indata, 
+                                threshold=current_rms_threshold, 
+                                required_duration=10.0,
+                                chunk_duration=BLOCK_SIZE/SAMPLE_RATE
+                            )
+
+                            state.is_paused = processor.track_end_silence_duration >= 3.0
+
+                            if stop_detected:
+                                print("🛑 Long silence detected! Resetting for next song...")
+                                state.current_track = {'title': '', 'artist': '', 'cover': None}
+                                state.is_playing = False
+                                state.is_paused = False
+                                state.song_start_time = None
+                                state.failed_attempts = 0
+                                state.click_history =[]
+                                processor.is_playing = False
                         # 4. WRITE TO DB
                         if time.time() - last_commit_time > DB_COMMIT_INTERVAL:
                             if buffer_seconds > 0:
@@ -182,10 +272,10 @@ def audio_processing_thread(app):
                         # 5. Emit to Frontend
                         socketio.emit('stats_update', {
                             'is_playing': state.is_playing,
+                            'is_paused': state.is_paused,
                             'rms': state.rms,
                             'track_time': current_track_time,
-                            # TODO: Replace this with proper track duration from the detected song
-                            'track_duration': 180,
+                            'track_duration': state.track_duration,
                             'click_history': state.click_history,
                             'click_count_now': state.current_clicks,
                             'current_track': state.current_track,
@@ -216,8 +306,9 @@ def handle_connect():
 def handle_manual_detect():
     if not state.is_identifying:
         print("👤 User requested manual detection")
-        from flask import current_app
-        audio_processing_thread(current_app._get_current_object())
+        
+        state.isUserdetect = True
+        threading.Thread(target=identify_and_save, args=(app,)).start()
 
 if __name__ == '__main__':
     app = create_app()
