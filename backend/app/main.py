@@ -26,6 +26,7 @@ class GlobalState:
     failed_attempts = 0
     track_duration = 180
     isUserdetect = False
+    is_paused = False
 
 state = GlobalState()
 
@@ -218,7 +219,6 @@ def audio_processing_thread(app):
                                 silence_detected = processor.check_silence_start(
                                     indata, 
                                     threshold=current_rms_threshold, 
-                                    # TODO: Adjust this if needed, default is 2 secs
                                     required_duration=1.0,
                                     chunk_duration=BLOCK_SIZE/SAMPLE_RATE
                                 )
@@ -231,6 +231,25 @@ def audio_processing_thread(app):
                                     state.failed_attempts = 0
                                     state.click_history =[]
                                     processor.is_playing = False
+
+                            stop_detected = processor.check_silence_start(
+                                indata, 
+                                threshold=current_rms_threshold, 
+                                required_duration=10.0,
+                                chunk_duration=BLOCK_SIZE/SAMPLE_RATE
+                            )
+
+                            state.is_paused = processor.track_end_silence_duration >= 3.0
+
+                            if stop_detected:
+                                print("🛑 Long silence detected! Resetting for next song...")
+                                state.current_track = {'title': '', 'artist': '', 'cover': None}
+                                state.is_playing = False
+                                state.is_paused = False
+                                state.song_start_time = None
+                                state.failed_attempts = 0
+                                state.click_history =[]
+                                processor.is_playing = False
                         # 4. WRITE TO DB
                         if time.time() - last_commit_time > DB_COMMIT_INTERVAL:
                             if buffer_seconds > 0:
@@ -253,6 +272,7 @@ def audio_processing_thread(app):
                         # 5. Emit to Frontend
                         socketio.emit('stats_update', {
                             'is_playing': state.is_playing,
+                            'is_paused': state.is_paused,
                             'rms': state.rms,
                             'track_time': current_track_time,
                             'track_duration': state.track_duration,
