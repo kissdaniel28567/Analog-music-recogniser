@@ -22,6 +22,7 @@
       <section class="panel left-panel">
         <div class="visualizer-wrapper">
           <div class="vinyl-container no-select"
+            :class="{ 'paused-pulse': isPaused }" 
             @contextmenu.prevent="openContextMenu"
             @click="handleContainerClick">
             
@@ -50,6 +51,7 @@
         <div class="track-info">
           <!-- Dynamic Text based on State -->
           <h2 v-if="isDetecting">Listening...</h2>
+          <h2 v-else-if="isPaused" style="color: var(--text-muted);">Music Paused...</h2>
           <h2 v-else>{{ currentTrack.title || "Ready to Play" }}</h2>
           
           <h3 v-if="!isDetecting">{{ currentTrack.artist || "Drop the needle to start" }}</h3>
@@ -163,8 +165,8 @@ import '../styles/dashboard.css';
 const themeStore = useThemeStore()
 
 const { 
-  authStore, showUserMenu, router, activeTab, isPlaying, isDetecting, 
-  hoursPlayed, totalClicks, currentClicks, currentRMS, currentTrack,
+  authStore, showUserMenu, router, activeTab, isPlaying, isPaused,
+  isDetecting, hoursPlayed, totalClicks, currentClicks, currentRMS, currentTrack,
   trackTime, clickHistory, trackDuration, formatTime,
   toggleUserMenu, handleLogout, triggerManualDetect 
 } = useDashboard();

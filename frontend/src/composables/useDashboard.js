@@ -11,6 +11,7 @@ export function useDashboard() {
 
     const isPlaying = ref(false);
     const isDetecting = ref(false);
+    const isPaused = ref(false);
     const hoursPlayed = ref(0);
     const totalClicks = ref(0);
     const currentClicks = ref(0);
@@ -53,6 +54,7 @@ export function useDashboard() {
         socket.on('stats_update', (data) => {
             // Basic stats
             isPlaying.value = !!data.is_playing;
+            isPaused.value = !!data.is_paused;
             currentRMS.value = data.rms || 0;
             hoursPlayed.value = data.total_hours || 0;
 
@@ -104,6 +106,7 @@ export function useDashboard() {
         router,
         activeTab,
         isPlaying,
+        isPaused,
         isDetecting,
         hoursPlayed,
         totalClicks,
