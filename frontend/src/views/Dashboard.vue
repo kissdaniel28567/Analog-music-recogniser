@@ -51,7 +51,6 @@
         <div class="track-info">
           <!-- Dynamic Text based on State -->
           <h2 v-if="isDetecting">Listening...</h2>
-          <h2 v-else-if="isPaused" style="color: var(--text-muted);">Music Paused...</h2>
           <h2 v-else>{{ currentTrack.title || "Ready to Play" }}</h2>
           
           <h3 v-if="!isDetecting">{{ currentTrack.artist || "Drop the needle to start" }}</h3>
@@ -93,7 +92,7 @@
           <div class="stat-item">
             <span class="stat-label">System Status</span>
             <div class="stat-value" :style="{ color: isPlaying ? 'var(--success)' : 'var(--text-muted)' }">
-              {{ isPlaying ? 'ACTIVE STREAM' : 'IDLE' }}
+              {{ isPlaying ? (isPaused ? 'MUSIC IS PAUSED' : "ACTIVE STREAM") : 'IDLE' }}
             </div>
           </div>
 
