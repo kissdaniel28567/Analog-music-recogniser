@@ -463,6 +463,50 @@
     animation: slow-pulse 2.5s infinite ease-in-out;
 }
 
+/* =========================================
+   LYRICS STYLING
+   ========================================= */
+
+.lyrics-area {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.lyrics-scroll {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px 10px 150px 10px;
+    scroll-behavior: smooth;
+    text-align: center;
+}
+
+.lyrics-scroll::-webkit-scrollbar { width: 0px; }
+
+.lyric-line {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    cursor: default;
+    font-weight: 500;
+    opacity: 0.5;
+}
+
+.lyric-line.active-lyric {
+    color: var(--text-main);
+    font-size: 1.5rem;
+    font-weight: 800;
+    opacity: 1;
+    transform: scale(1.05);
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}[data-style="retro"] .lyric-line.active-lyric {
+    color: var(--primary);
+    text-shadow: none;
+    background-color: #fff;
+}
+
 /* --- RESPONSIVE --- */
 @media (max-width: 900px) {
     .main-grid {
