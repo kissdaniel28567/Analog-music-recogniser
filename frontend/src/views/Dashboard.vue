@@ -179,7 +179,8 @@ const {
   authStore, showUserMenu, router, activeTab, isPlaying, isPaused,
   isDetecting, hoursPlayed, totalClicks, currentClicks, currentRMS, currentTrack,
   trackTime, clickHistory, trackDuration, formatTime,
-  toggleUserMenu, handleLogout, triggerManualDetect, setVinylColor
+  toggleUserMenu, handleLogout, triggerManualDetect, setVinylColor,
+  parsedLyrics, activeLyricIndex, lyricsContainerRef
 } = useDashboard();
 
 const {
