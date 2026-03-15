@@ -36,23 +36,27 @@ def handle_manual_detect():
 def handle_set_vinyl_color(data):
     color_class = data.get('color')
     artist = state.current_track.get('artist')
-    title = state.current_track.get('title')
+    album = state.current_track.get('album')
 
-    if not color_class or not title:
+    if not color_class or not album or album == "Unknown Album":
+        print("⚠️ Cannot save color: No album metadata found for this track.")
+        state.current_track['color'] = color_class
         return
 
-    print(f"🎨 User changed vinyl color to: {color_class}")
+    print(f"🎨 Saving vinyl color '{color_class}' for Album: '{album}'")
     
     state.current_track['color'] = color_class
 
+    from flask import current_app
     app = current_app._get_current_object()
     with app.app_context():
         active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
         if active_cart and active_cart.owner:
+            
             existing_record = AlbumColor.query.filter_by(
                 user_id=active_cart.owner.id,
                 artist=artist,
-                title=title
+                album=album
             ).first()
 
             if existing_record:
@@ -61,7 +65,7 @@ def handle_set_vinyl_color(data):
                 new_color_record = AlbumColor(
                     user_id=active_cart.owner.id,
                     artist=artist,
-                    title=title,
+                    album=album,
                     color_class=color_class
                 )
                 db.session.add(new_color_record)
