@@ -109,6 +109,28 @@ def identify_and_save(app, device_id=None):
                                 print(f"🎨 Loaded saved vinyl color: {saved_color_record.color_class}")
                             else:
                                 print("🎨 Something went wrong getting vinyl color")
+
+                try:
+                    artist_safe = urllib.parse.quote(state.current_track['artist'])
+                    track_safe = urllib.parse.quote(state.current_track['title'])
+
+                    lrc_url = f"https://lrclib.net/api/get?artist_name={artist_safe}&track_name={track_safe}"
+                    lrc_req = urllib.request.Request(lrc_url, headers={'User-Agent': 'SmartTurntable/1.0'})
+                    
+                    with urllib.request.urlopen(lrc_req, timeout=5) as response:
+                        lrc_data = json.loads(response.read().decode())
+                        lyrics = lrc_data.get('syncedLyrics') or lrc_data.get('plainLyrics') or ""
+                        state.current_track['lyrics'] = lyrics
+                        
+                        if lrc_data.get('syncedLyrics'):
+                            print("📝 Synced lyrics found!")
+                        elif lrc_data.get('plainLyrics'):
+                            print("📜 Plain (unsynced) lyrics found.")
+                except urllib.error.HTTPError as e:
+                    if e.code == 404:
+                        print("⚠️ Lyrics not found in database.")
+                except Exception as e:
+                    print(f"⚠️ Lyrics API failed: {e}")
                 
                 if state.is_userdetect and state.temp_start_time is not None:
                     state.song_start_time = state.temp_start_time
