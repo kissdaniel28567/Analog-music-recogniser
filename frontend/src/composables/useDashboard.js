@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
 import { io } from "socket.io-client";
@@ -50,7 +50,7 @@ export function useDashboard() {
     onMounted(() => {
         socket = io('http://localhost:5000');
 
-        // 1. LIVE STATS
+        // ============ LIVE STATS ============
         socket.on('stats_update', (data) => {
             // Basic stats
             isPlaying.value = !!data.is_playing;
@@ -60,15 +60,12 @@ export function useDashboard() {
 
             // Track info
             trackTime.value = data.track_time || 0;
-            // TODO: This may not work when backend sends proper track length
             if (data.track_duration) trackDuration.value = data.track_duration;
 
             // Clicks
             currentClicks.value = data.click_count_now || 0;
             clickHistory.value = data.click_history || [];
             totalClicks.value = clickHistory.value.reduce((sum, item) => sum + item.count, 0);
-            
-            // TODO: might not need this in the future
             trackTime.value = data.track_time || 0;
             
             if (data.current_track && data.current_track.title) {
@@ -78,7 +75,7 @@ export function useDashboard() {
             }
         });
 
-        // 2. STATUS CHANGE
+        // ============ STATUS CHANGE ============ 
         socket.on('status_change', (data) => {
             if (data.status === 'identifying') {
                 isDetecting.value = true;
@@ -87,7 +84,7 @@ export function useDashboard() {
             }
         });
 
-        // 3. TRACK RESULT
+        // ============ TRACK RESULT ============ 
         socket.on('track_identified', (match) => {
             if (match) {
                 currentTrack.value = match;
@@ -100,6 +97,7 @@ export function useDashboard() {
         if (socket) socket.disconnect();
     });
 
+    // ============ VINYL COLOR CHANGE ============ 
     const setVinylColor = (colorClass) => {
         if (!currentTrack.value.title) return;
         
