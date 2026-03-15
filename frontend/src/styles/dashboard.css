@@ -459,18 +459,15 @@
     }
 }
 
-/* We apply this to the whole container when paused */
 .paused-pulse {
     animation: slow-pulse 2.5s infinite ease-in-out;
-    /* Optional: Pause the spin animation of the record inside it */
-    /* pointer-events: none; */ 
 }
 
 /* --- RESPONSIVE --- */
 @media (max-width: 900px) {
     .main-grid {
         grid-template-columns: 1fr;
-        height: auto; /* Allow natural scrolling */
+        height: auto;
     }
     .dashboard-container {
         height: auto;
