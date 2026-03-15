@@ -16,7 +16,7 @@ export function useDashboard() {
     const totalClicks = ref(0);
     const currentClicks = ref(0);
     const currentRMS = ref(0);
-    const currentTrack = ref({ title: '', artist: '', cover: null });
+    const currentTrack = ref({ title: '', artist: '', cover: null, color: 'v-classic' });
     const trackTime = ref(0);
     const trackDuration = ref(180);
     const clickHistory = ref([]);
@@ -100,6 +100,18 @@ export function useDashboard() {
         if (socket) socket.disconnect();
     });
 
+    const setVinylColor = (colorClass) => {
+        if (!currentTrack.value.title) return;
+        
+        currentTrack.value.color = colorClass; 
+        
+        if (socket) {
+            socket.emit('set_vinyl_color', { color: colorClass });
+        }
+    };
+
+
+
     return {
         authStore,
         showUserMenu,
@@ -119,7 +131,8 @@ export function useDashboard() {
         formatTime,
         toggleUserMenu,
         handleLogout,
-        triggerManualDetect
+        triggerManualDetect,
+        setVinylColor
     };
 }
 
@@ -213,7 +226,6 @@ export function useVinylInteractions(themeStore, { contextMenuWidth = 220 } = {}
   });
 
   return {
-    // context menu + vinyl selection
     showMenu,
     menuX,
     menuY,
@@ -221,8 +233,6 @@ export function useVinylInteractions(themeStore, { contextMenuWidth = 220 } = {}
     vinylOptions,
     openContextMenu,
     closeContextMenu,
-
-    // popcorn effect
     clickCount,
     fireEmojis,
     handleContainerClick,

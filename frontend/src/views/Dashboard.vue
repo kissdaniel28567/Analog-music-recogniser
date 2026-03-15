@@ -33,7 +33,7 @@
             </div>
 
             <!-- 2. The Vinyl Record (Tucked Underneath, Peeking Right) -->
-            <div class="vinyl-record" :class="[{ spinning: isPlaying || isDetecting }, activeVinylStyle]">
+            <div class="vinyl-record" :class="[{ spinning: isPlaying || isDetecting }, currentTrack.color || 'v-classic']">
               <div class="record-label">
                  <!-- Put a tiny version of the cover on the record label too! -->
                  <img v-if="currentTrack.cover" :src="currentTrack.cover" />
@@ -146,7 +146,8 @@
     <div v-if="showMenu" class="custom-context-menu" :style="{ left: menuX + 'px', top: menuY + 'px' }">
       <div class="menu-header">Select Vinyl Style</div>
       <div class="menu-scroll">
-        <div v-for="style in vinylOptions" :key="style.class" class="menu-item" @click="activeVinylStyle = style.class">
+        <div v-for="style in vinylOptions" :key="style.class" class="menu-item" 
+             @click="setVinylColor(style.class); closeContextMenu()">
           {{ style.name }}
         </div>
       </div>
@@ -167,7 +168,7 @@ const {
   authStore, showUserMenu, router, activeTab, isPlaying, isPaused,
   isDetecting, hoursPlayed, totalClicks, currentClicks, currentRMS, currentTrack,
   trackTime, clickHistory, trackDuration, formatTime,
-  toggleUserMenu, handleLogout, triggerManualDetect 
+  toggleUserMenu, handleLogout, triggerManualDetect, setVinylColor
 } = useDashboard();
 
 const {

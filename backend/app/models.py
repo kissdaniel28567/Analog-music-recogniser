@@ -34,3 +34,11 @@ class TrackHistory(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)  # deprecated TODO: Change to latest solution
     
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+class AlbumColor(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    artist = db.Column(db.String(200), nullable=False)
+    album = db.Column(db.String(200), nullable=False)
+    color_class = db.Column(db.String(50), nullable=False, default='v-classic')
+    
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
