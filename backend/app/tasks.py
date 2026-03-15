@@ -42,7 +42,6 @@ def identify_and_save(app, device_id=None):
 
             if state.current_track['title'] == new_title and state.failed_attempts < 5:
                 if state.is_userdetect:
-                    # TODO: emmit something like this
                     message = f"⚠️ Detected the same song again: {new_title}. If you think this is worng press detect again"
                     socketio.emit('info', message)
                 else:
@@ -53,21 +52,10 @@ def identify_and_save(app, device_id=None):
                 state.current_track = {
                     'title' : track.get('title'),
                     'artist' : track.get('subtitle'),
+                    'album': 'Unknown Album',
                     'cover' : track.get('images', {}).get('coverart'),
                     'color' : 'v-classic'
                 }
-
-                active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
-                if active_cart and active_cart.owner:
-                        saved_color_record = AlbumColor.query.filter_by(
-                            user_id=active_cart.owner.id,
-                            artist=state.current_track['artist'],
-                            title=state.current_track['title']
-                        ).first()
-                        
-                        if saved_color_record:
-                            state.current_track['color'] = saved_color_record.color_class
-                            print(f"🎨 Loaded saved vinyl color: {saved_color_record.color_class}")
 
                 # TODO: Might need to reset something else too
                 if state.is_userdetect and state.temp_start_time is not None:
@@ -92,15 +80,40 @@ def identify_and_save(app, device_id=None):
                             itunes_data = json.loads(response.read().decode())
                             
                             if itunes_data['resultCount'] > 0:
-                                duration_ms = itunes_data['results'][0]['trackTimeMillis']
+                                itunes_result = itunes_data['results'][0]
+                                duration_ms = itunes_result['trackTimeMillis']
                                 state.track_duration = duration_ms / 1000.0
-                                print(f"⏱️  Exact duration found via Apple ID: {state.track_duration}s")
+
+                                fetched_album = itunes_result.get('collectionName')
+                                if fetched_album:
+                                    state.current_track['album'] = fetched_album
+                                print(f"⏱️ Exact duration: {state.track_duration}s | 💿 Album: {state.current_track['album']}")
                             else:
-                                print("⚠️ ID lookup returned no duration, using 210s fallback.")
+                                print("⚠️ ID lookup returned no duration, using fallbacks.")
                     except Exception as e:
                         print(f"⚠️ API lookup failed: {e}")
                 else:
                     print("⚠️ No Apple Music ID in Shazam data, using 210s fallback.")
+
+                with app.app_context():
+                    active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
+                    if active_cart and active_cart.owner:
+                            saved_color_record = AlbumColor.query.filter_by(
+                                user_id=active_cart.owner.id,
+                                artist=state.current_track['artist'],
+                                album=state.current_track['album']
+                            ).first()
+                            
+                            if saved_color_record:
+                                state.current_track['color'] = saved_color_record.color_class
+                                print(f"🎨 Loaded saved vinyl color: {saved_color_record.color_class}")
+                            else:
+                                print("🎨 Something went wrong getting vinyl color")
+                
+                if state.is_userdetect and state.temp_start_time is not None:
+                    state.song_start_time = state.temp_start_time
+                    state.click_history =[]
+                    state.temp_start_time = None
 
                 state.failed_attempts = 0
                 found_match = True
@@ -111,7 +124,8 @@ def identify_and_save(app, device_id=None):
                 try:
                     history = TrackHistory(
                         title=state.current_track['title'], 
-                        artist=state.current_track['artist'], 
+                        artist=state.current_track['artist'],
+                        album=state.current_track['album'],
                         cover_art=state.current_track['cover'])
                     db.session.add(history)
                     db.session.commit()
@@ -239,7 +253,7 @@ def audio_processing_thread(app):
 
                             if stop_detected:
                                 print("🛑 Long silence detected! Resetting for next song...")
-                                state.current_track = {'title': '', 'artist': '', 'cover': None}
+                                state.current_track = {'title': '', 'artist': '', 'album':'', 'cover': None, 'color': 'v-classic'}
                                 state.is_playing = False
                                 state.is_paused = False
                                 state.song_start_time = None
@@ -255,7 +269,8 @@ def audio_processing_thread(app):
                                     if active_cart:
                                         active_cart.total_hours += (buffer_seconds / 3600.0)
                                         db.session.commit()
-                                        print("💾 Stats saved to DB")
+                                        # might need in the future for debug
+                                        #print("💾 Stats saved to DB")
                                     buffer_seconds = 0.0
                                 except Exception as e:
                                     print(f"⚠️ DB Write Error: {e}")
