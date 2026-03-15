@@ -1,7 +1,7 @@
 class GlobalState:
     is_playing = False
     is_identifying = False
-    current_track = {'title': '', 'artist': '', 'album':'', 'cover': None, 'color': 'v-classic'}
+    current_track = {'title': '', 'artist': '', 'album': '', 'cover': None, 'color': 'v-classic', 'lyrics': ''}
     song_start_time = None
     click_history = []
     

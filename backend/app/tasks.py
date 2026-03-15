@@ -253,7 +253,12 @@ def audio_processing_thread(app):
 
                             if stop_detected:
                                 print("🛑 Long silence detected! Resetting for next song...")
-                                state.current_track = {'title': '', 'artist': '', 'album':'', 'cover': None, 'color': 'v-classic'}
+                                state.current_track = {
+                                    'title': '',
+                                    'artist': '', 'album': '', 
+                                    'cover': None, 'color': 'v-classic',
+                                    'lyrics': ''
+                                }
                                 state.is_playing = False
                                 state.is_paused = False
                                 state.song_start_time = None
