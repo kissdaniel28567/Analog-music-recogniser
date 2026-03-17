@@ -59,7 +59,7 @@ def identify_and_save(app, device_id=None):
 
                 # TODO: Might need to reset something else too
                 if state.is_userdetect and state.temp_start_time is not None:
-                    state.song_start_time = state.temp_start_time
+                    state.song_start_time = state.temp_start_time + 1
                     state.click_history = []
                 
                 state.track_duration = 210.0
@@ -109,9 +109,36 @@ def identify_and_save(app, device_id=None):
                                 print(f"🎨 Loaded saved vinyl color: {saved_color_record.color_class}")
                             else:
                                 print("🎨 Something went wrong getting vinyl color")
+
+                try:
+                    artist_safe = urllib.parse.quote(state.current_track['artist'])
+                    track_safe = urllib.parse.quote(state.current_track['title'])
+
+                    lrc_url = f"https://lrclib.net/api/get?artist_name={artist_safe}&track_name={track_safe}"
+                    lrc_req = urllib.request.Request(lrc_url, headers={'User-Agent': 'SmartTurntable/1.0'})
+                    
+                    with urllib.request.urlopen(lrc_req, timeout=5) as response:
+                        lrc_data = json.loads(response.read().decode())
+                        lyrics = lrc_data.get('syncedLyrics') or lrc_data.get('plainLyrics') or ""
+                        state.current_track['lyrics'] = lyrics
+                        
+                        if lrc_data.get('syncedLyrics'):
+                            print("📝 Synced lyrics found!")
+                        elif lrc_data.get('plainLyrics'):
+                            print("📜 Plain (unsynced) lyrics found.")
+                        else:
+                            print("⚠️ Lyrics not found in database.")
+                except urllib.error.HTTPError as e:
+                    # FYI: This only sees if the song is in the database not the lyrics
+                    if e.code == 404:
+                        print("⚠️ Lyrics not found in database.")
+                    else:
+                        print(f"⚠️ Lyrics had some HTTP problems {e}")
+                except Exception as e:
+                    print(f"⚠️ Lyrics API failed: {e}")
                 
                 if state.is_userdetect and state.temp_start_time is not None:
-                    state.song_start_time = state.temp_start_time
+                    state.song_start_time = state.temp_start_time + 1
                     state.click_history =[]
                     state.temp_start_time = None
 
@@ -200,7 +227,7 @@ def audio_processing_thread(app):
                         
                         if music_just_started or needs_retry:
                             print("🎵 Music start detected! Triggering identification...")
-                            state.song_start_time = time.time()
+                            state.song_start_time = time.time() + 1
                             state.click_history = []
 
                             state.is_userdetect = False
@@ -211,7 +238,7 @@ def audio_processing_thread(app):
                         current_track_time = 0.0
                         if state.is_playing:
                             if state.song_start_time is None:
-                                state.song_start_time = time.time()
+                                state.song_start_time = time.time() + 1
                                 print("⏱️ Timer Started")
                             current_track_time = time.time() - state.song_start_time
                             buffer_seconds += (BLOCK_SIZE / SAMPLE_RATE)
@@ -253,7 +280,12 @@ def audio_processing_thread(app):
 
                             if stop_detected:
                                 print("🛑 Long silence detected! Resetting for next song...")
-                                state.current_track = {'title': '', 'artist': '', 'album':'', 'cover': None, 'color': 'v-classic'}
+                                state.current_track = {
+                                    'title': '',
+                                    'artist': '', 'album': '', 
+                                    'cover': None, 'color': 'v-classic',
+                                    'lyrics': ''
+                                }
                                 state.is_playing = False
                                 state.is_paused = False
                                 state.song_start_time = None

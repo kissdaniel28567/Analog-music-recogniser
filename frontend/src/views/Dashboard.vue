@@ -77,12 +77,23 @@
 
         <!-- LYRICS TAB -->
         <div v-if="activeTab === 'lyrics'" class="tab-content lyrics-area">
-          <p v-if="!currentTrack.title" style="color: var(--text-muted); margin-top: 50px;">
+          <p v-if="!currentTrack.title" class="placeholder-text">
             Waiting for song identification...
           </p>
-          <div v-else>
-             <!-- Placeholder for real lyrics later -->
-             <p>Lyrics for <strong>{{ currentTrack.title }}</strong> would appear here.</p>
+          <p v-else-if="parsedLyrics.length === 0" class="placeholder-text">
+            No lyrics found for {{ currentTrack.title }}.
+          </p>
+          
+          <div v-else class="lyrics-scroll" ref="lyricsContainerRef">
+             <p 
+                v-for="(line, index) in parsedLyrics" 
+                :key="index"
+                class="lyric-line"
+                :class="{ 'active-lyric': index === activeLyricIndex }"
+             >
+                <!-- TODO: This is for instrumentals, this might change -->
+                {{ line.text || '🎶' }}
+             </p>
           </div>
         </div>
 
@@ -168,7 +179,8 @@ const {
   authStore, showUserMenu, router, activeTab, isPlaying, isPaused,
   isDetecting, hoursPlayed, totalClicks, currentClicks, currentRMS, currentTrack,
   trackTime, clickHistory, trackDuration, formatTime,
-  toggleUserMenu, handleLogout, triggerManualDetect, setVinylColor
+  toggleUserMenu, handleLogout, triggerManualDetect, setVinylColor,
+  parsedLyrics, activeLyricIndex, lyricsContainerRef
 } = useDashboard();
 
 const {

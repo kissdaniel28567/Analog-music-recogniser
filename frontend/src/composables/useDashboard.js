@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
 import { io } from "socket.io-client";
@@ -20,6 +20,8 @@ export function useDashboard() {
     const trackTime = ref(0);
     const trackDuration = ref(180);
     const clickHistory = ref([]);
+    const parsedLyrics = ref([]);
+    const lyricsContainerRef = ref(null);
 
     let socket = null;
 
@@ -47,10 +49,52 @@ export function useDashboard() {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
+    // ============ DISPLAY FOR LYRICS ============
+    const parseLRC = (lrcString) => {
+        if (!lrcString) return[];
+        const lines = lrcString.split('\n');
+        const parsed = [];
+        const regex = /\[(\d{2}):(\d{2}(?:\.\d+)?)\](.*)/;
+
+        lines.forEach(line => {
+            const match = regex.exec(line);
+            if (match) {
+                const minutes = parseInt(match[1], 10);
+                const seconds = parseFloat(match[2]);
+                const text = match[3].trim();
+                parsed.push({ time: (minutes * 60) + seconds, text: text });
+            } else if (line.trim() !== '') {
+                // === CONFIG FOR UNSYNCED LYRICS ===
+                parsed.push({ time: -1, text: line.trim() });
+            }
+        });
+        return parsed;
+    };
+
+    const activeLyricIndex = computed(() => {
+        if (!parsedLyrics.value.length || parsedLyrics.value[0].time === -1) return -1;
+        
+        for (let i = parsedLyrics.value.length - 1; i >= 0; i--) {
+            if (trackTime.value >= parsedLyrics.value[i].time) {
+                return i;
+            }
+        }
+        return 0;
+    });
+
+    watch(activeLyricIndex, (newIndex) => {
+        if (newIndex >= 0 && lyricsContainerRef.value) {
+            const activeEl = lyricsContainerRef.value.querySelector('.active-lyric');
+            if (activeEl) {
+                activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+
     onMounted(() => {
         socket = io('http://localhost:5000');
 
-        // 1. LIVE STATS
+        // ============ LIVE STATS ============
         socket.on('stats_update', (data) => {
             // Basic stats
             isPlaying.value = !!data.is_playing;
@@ -60,25 +104,23 @@ export function useDashboard() {
 
             // Track info
             trackTime.value = data.track_time || 0;
-            // TODO: This may not work when backend sends proper track length
             if (data.track_duration) trackDuration.value = data.track_duration;
 
             // Clicks
             currentClicks.value = data.click_count_now || 0;
             clickHistory.value = data.click_history || [];
             totalClicks.value = clickHistory.value.reduce((sum, item) => sum + item.count, 0);
-            
-            // TODO: might not need this in the future
             trackTime.value = data.track_time || 0;
             
             if (data.current_track && data.current_track.title) {
                 currentTrack.value = data.current_track;
+                parsedLyrics.value = parseLRC(data.current_track.lyrics);
             } else if (!isDetecting.value) {
                 // TODO: Clear data if we are not busy looking for it
             }
         });
 
-        // 2. STATUS CHANGE
+        // ============ STATUS CHANGE ============ 
         socket.on('status_change', (data) => {
             if (data.status === 'identifying') {
                 isDetecting.value = true;
@@ -87,7 +129,7 @@ export function useDashboard() {
             }
         });
 
-        // 3. TRACK RESULT
+        // ============ TRACK RESULT ============ 
         socket.on('track_identified', (match) => {
             if (match) {
                 currentTrack.value = match;
@@ -100,6 +142,7 @@ export function useDashboard() {
         if (socket) socket.disconnect();
     });
 
+    // ============ VINYL COLOR CHANGE ============ 
     const setVinylColor = (colorClass) => {
         if (!currentTrack.value.title) return;
         
@@ -128,6 +171,9 @@ export function useDashboard() {
         trackTime,
         trackDuration,
         clickHistory,
+        parsedLyrics,
+        activeLyricIndex,
+        lyricsContainerRef,
         formatTime,
         toggleUserMenu,
         handleLogout,
