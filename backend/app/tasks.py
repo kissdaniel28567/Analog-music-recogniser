@@ -59,7 +59,7 @@ def identify_and_save(app, device_id=None):
 
                 # TODO: Might need to reset something else too
                 if state.is_userdetect and state.temp_start_time is not None:
-                    state.song_start_time = state.temp_start_time
+                    state.song_start_time = state.temp_start_time + 1
                     state.click_history = []
                 
                 state.track_duration = 210.0
@@ -126,14 +126,19 @@ def identify_and_save(app, device_id=None):
                             print("📝 Synced lyrics found!")
                         elif lrc_data.get('plainLyrics'):
                             print("📜 Plain (unsynced) lyrics found.")
+                        else:
+                            print("⚠️ Lyrics not found in database.")
                 except urllib.error.HTTPError as e:
+                    # FYI: This only sees if the song is in the database not the lyrics
                     if e.code == 404:
                         print("⚠️ Lyrics not found in database.")
+                    else:
+                        print(f"⚠️ Lyrics had some HTTP problems {e}")
                 except Exception as e:
                     print(f"⚠️ Lyrics API failed: {e}")
                 
                 if state.is_userdetect and state.temp_start_time is not None:
-                    state.song_start_time = state.temp_start_time
+                    state.song_start_time = state.temp_start_time + 1
                     state.click_history =[]
                     state.temp_start_time = None
 
@@ -222,7 +227,7 @@ def audio_processing_thread(app):
                         
                         if music_just_started or needs_retry:
                             print("🎵 Music start detected! Triggering identification...")
-                            state.song_start_time = time.time()
+                            state.song_start_time = time.time() + 1
                             state.click_history = []
 
                             state.is_userdetect = False
@@ -233,7 +238,7 @@ def audio_processing_thread(app):
                         current_track_time = 0.0
                         if state.is_playing:
                             if state.song_start_time is None:
-                                state.song_start_time = time.time()
+                                state.song_start_time = time.time() + 1
                                 print("⏱️ Timer Started")
                             current_track_time = time.time() - state.song_start_time
                             buffer_seconds += (BLOCK_SIZE / SAMPLE_RATE)
