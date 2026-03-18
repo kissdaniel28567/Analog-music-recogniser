@@ -52,6 +52,16 @@ export function useDashboard() {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
+    const adjustSync = (offsetSeconds) => {
+        if (socket && isPlaying.value) {
+            console.log(`Tweaking sync by ${offsetSeconds}s`);
+            socket.emit('adjust_track_time', { offset: offsetSeconds });
+            
+            // Optimistic UI update for instant visual feedback
+            trackTime.value += offsetSeconds;
+        }
+    };
+
     // ============ DISPLAY FOR LYRICS ============
     const parseLRC = (lrcString) => {
         if (!lrcString) return[];
@@ -215,6 +225,7 @@ export function useDashboard() {
         remainingPercent,
         isLowRemaining,
         isAutoScrollEnabled,
+        adjustSync,
         handleUserScroll,
         resyncLyrics,
         formatTime,
