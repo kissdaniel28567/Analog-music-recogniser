@@ -1,4 +1,4 @@
-import { ref, computed, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
 import { io } from "socket.io-client";
@@ -84,7 +84,9 @@ export function useDashboard() {
         return parsed;
     };
 
-    const scrollToActive = () => {
+    const scrollToActive = async () => {
+        await nextTick(); 
+        
         if (lyricsContainerRef.value) {
             const activeEl = lyricsContainerRef.value.querySelector('.active-lyric');
             if (activeEl) {
@@ -104,11 +106,16 @@ export function useDashboard() {
         return 0;
     });
 
-    watch(activeLyricIndex, (newIndex) => {
-        if (newIndex >= 0 && lyricsContainerRef.value) {
-            if (isAutoScrollEnabled.value) {
-                scrollToActive();
-            }
+    watch(activeLyricIndex, () => {
+        if (isAutoScrollEnabled.value) {
+            scrollToActive();
+        }
+    });
+
+    watch(activeTab, (newTab) => {
+        if (newTab === 'lyrics' && isAutoScrollEnabled.value) {
+            console.log("📋 Switched to lyrics tab, jumping to current line.");
+            scrollToActive();
         }
     });
 
