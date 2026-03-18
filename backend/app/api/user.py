@@ -31,7 +31,9 @@ def update_settings():
     current_user.click_sensitivity = float(data.get('click_sensitivity', current_user.click_sensitivity))
     
     device_id = data.get('audio_device_id')
-    if device_id is not None and str(device_id).strip() != "":
+    if device_id is None or str(device_id).strip() == "" or device_id == "null":
+        current_user.audio_device_id = None
+    else:
         current_user.audio_device_id = int(device_id)
         
     db.session.commit()
