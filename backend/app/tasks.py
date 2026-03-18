@@ -217,10 +217,12 @@ def audio_processing_thread(app):
                             indata, chunk_duration=BLOCK_SIZE/SAMPLE_RATE,
                             threshold=current_rms_threshold)
                         rms_volume = processor.calculate_rms(indata)
+                        rumble_value = processor.measure_rumble(indata)
 
                         state.is_playing = processor.is_playing
                         state.rms = float(rms_volume)
                         state.current_clicks = clicks
+                        state.rumble = float(rumble_value)
 
                         needs_retry = (state.is_playing
                                        and 0 < state.failed_attempts < 5)
@@ -321,6 +323,7 @@ def audio_processing_thread(app):
                             'track_duration': state.track_duration,
                             'click_history': state.click_history,
                             'click_count_now': state.current_clicks,
+                            'rumble': state.rumble,
                             'current_track': state.current_track,
                             'total_hours': (active_cart.total_hours + (buffer_seconds/3600)) if active_cart else 0
                         })
