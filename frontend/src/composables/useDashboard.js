@@ -24,6 +24,7 @@ export function useDashboard() {
     const lyricsContainerRef = ref(null);
     const maxHours = ref(1000);
     const lowThreshold = ref(150);
+    const isAutoScrollEnabled = ref(true);
 
     let socket = null;
 
@@ -73,6 +74,15 @@ export function useDashboard() {
         return parsed;
     };
 
+    const scrollToActive = () => {
+        if (lyricsContainerRef.value) {
+            const activeEl = lyricsContainerRef.value.querySelector('.active-lyric');
+            if (activeEl) {
+                activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    };
+
     const activeLyricIndex = computed(() => {
         if (!parsedLyrics.value.length || parsedLyrics.value[0].time === -1) return -1;
         
@@ -86,12 +96,22 @@ export function useDashboard() {
 
     watch(activeLyricIndex, (newIndex) => {
         if (newIndex >= 0 && lyricsContainerRef.value) {
-            const activeEl = lyricsContainerRef.value.querySelector('.active-lyric');
-            if (activeEl) {
-                activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (isAutoScrollEnabled.value) {
+                scrollToActive();
             }
         }
     });
+
+    const handleUserScroll = () => {
+        if (isAutoScrollEnabled.value) {
+            isAutoScrollEnabled.value = false;
+        }
+    };
+
+    const resyncLyrics = () => {
+        isAutoScrollEnabled.value = true;
+        scrollToActive();
+    };
 
     const remainingHours = computed(() => {
         return Math.max(0, maxHours.value - hoursPlayed.value);
@@ -194,6 +214,9 @@ export function useDashboard() {
         remainingHours,
         remainingPercent,
         isLowRemaining,
+        isAutoScrollEnabled,
+        handleUserScroll,
+        resyncLyrics,
         formatTime,
         toggleUserMenu,
         handleLogout,
