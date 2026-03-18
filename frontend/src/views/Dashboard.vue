@@ -83,16 +83,34 @@
           <p v-else-if="parsedLyrics.length === 0" class="placeholder-text">
             No lyrics found for {{ currentTrack.title }}.
           </p>
+
+          <div v-else class="lyrics-wrapper">
+            <div class="sync-controls">
+              <button @click="adjustSync(-0.25)" class="sync-btn" title="Move Lyrics Backward">-0.25s</button>
+              <button 
+                v-if="!isAutoScrollEnabled" 
+                @click="resyncLyrics" 
+                class="sync-btn resync-highlight"
+              >
+                Resync
+              </button>
+              <span v-else class="sync-label">Auto-Following</span>
+              <button @click="adjustSync(0.25)" class="sync-btn" title="Move Lyrics Forward">+0.25s</button>
+            </div>
           
-          <div v-else class="lyrics-scroll" ref="lyricsContainerRef">
-             <p 
-                v-for="(line, index) in parsedLyrics" 
-                :key="index"
-                class="lyric-line"
-                :class="{ 'active-lyric': index === activeLyricIndex }"
-             >
-                {{ line.text || '-' }}
-             </p>
+            <div class="lyrics-scroll" ref="lyricsContainerRef"
+              @wheel="handleUserScroll"
+              @touchstart="handleUserScroll"
+              @mousedown="handleUserScroll">
+              <p 
+                  v-for="(line, index) in parsedLyrics" 
+                  :key="index"
+                  class="lyric-line"
+                  :class="{ 'active-lyric': index === activeLyricIndex }"
+              >
+                  {{ line.text || '-' }}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -192,6 +210,7 @@ const {
   toggleUserMenu, handleLogout, triggerManualDetect, setVinylColor,
   parsedLyrics, activeLyricIndex, lyricsContainerRef, maxHours,
   lowThreshold, remainingHours, remainingPercent, isLowRemaining,
+  adjustSync, handleUserScroll, resyncLyrics, isAutoScrollEnabled
 } = useDashboard();
 
 const {
