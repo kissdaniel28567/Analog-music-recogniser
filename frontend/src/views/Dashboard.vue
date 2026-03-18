@@ -91,8 +91,7 @@
                 class="lyric-line"
                 :class="{ 'active-lyric': index === activeLyricIndex }"
              >
-                <!-- TODO: This is for instrumentals, this might change -->
-                {{ line.text || '🎶' }}
+                {{ line.text || '-' }}
              </p>
           </div>
         </div>
@@ -108,12 +107,23 @@
           </div>
 
           <div class="stat-item">
-             <span class="stat-label">Cartridge Hours</span>
-             <div class="stat-value">{{ hoursPlayed.toFixed(4) }} h</div>
-             <div class="bar-container">
-               <!-- Example: 1000 hours max -->
-               <div class="bar-fill" :style="{ width: (hoursPlayed / 1000 * 100) + '%' }"></div>
-             </div>
+             <span class="stat-label">Remaining cartridge Hours</span>
+             
+            <div class="stat-value">
+              {{ Math.max(0, 1000 - hoursPlayed).toFixed(1) }} h
+            </div>
+
+            <div class="bar-container rtl">
+
+              <div
+                class="bar-fill"
+                :class="{ low: isLowRemaining }"
+                :style="{ width: remainingPercent + '%' }"
+                title="Remaining"
+              ></div>
+
+
+            </div>
           </div>
 
           <div class="stat-item">
@@ -180,7 +190,8 @@ const {
   isDetecting, hoursPlayed, totalClicks, currentClicks, currentRMS, currentTrack,
   trackTime, clickHistory, trackDuration, formatTime,
   toggleUserMenu, handleLogout, triggerManualDetect, setVinylColor,
-  parsedLyrics, activeLyricIndex, lyricsContainerRef
+  parsedLyrics, activeLyricIndex, lyricsContainerRef, maxHours,
+  lowThreshold, remainingHours, remainingPercent, isLowRemaining,
 } = useDashboard();
 
 const {

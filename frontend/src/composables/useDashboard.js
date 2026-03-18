@@ -7,7 +7,7 @@ export function useDashboard() {
     const authStore = useAuthStore();
     const router = useRouter();
     const showUserMenu = ref(false);
-    const activeTab = ref('diagnostics');
+    const activeTab = ref('lyrics');
 
     const isPlaying = ref(false);
     const isDetecting = ref(false);
@@ -22,6 +22,8 @@ export function useDashboard() {
     const clickHistory = ref([]);
     const parsedLyrics = ref([]);
     const lyricsContainerRef = ref(null);
+    const maxHours = ref(1000);
+    const lowThreshold = ref(150);
 
     let socket = null;
 
@@ -90,6 +92,19 @@ export function useDashboard() {
             }
         }
     });
+
+    const remainingHours = computed(() => {
+        return Math.max(0, maxHours.value - hoursPlayed.value);
+    });
+
+    const remainingPercent = computed(() => {
+        return (remainingHours.value / maxHours.value) * 100;
+    });
+
+    const isLowRemaining = computed(() => {
+        return remainingHours.value < lowThreshold.value;
+    });
+
 
     onMounted(() => {
         socket = io('http://localhost:5000');
@@ -174,11 +189,16 @@ export function useDashboard() {
         parsedLyrics,
         activeLyricIndex,
         lyricsContainerRef,
+        maxHours,
+        lowThreshold,
+        remainingHours,
+        remainingPercent,
+        isLowRemaining,
         formatTime,
         toggleUserMenu,
         handleLogout,
         triggerManualDetect,
-        setVinylColor
+        setVinylColor,
     };
 }
 
