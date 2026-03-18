@@ -1,0 +1,35 @@
+services:
+  backend:
+    build: 
+      context: ./backend
+    container_name: smart_turntable_backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+      - /run/user/1000/pulse/native:/run/user/1000/pulse/native
+      - ~/.config/pulse/cookie:/root/.config/pulse/cookie
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PULSE_SERVER=unix:/run/user/1000/pulse/native
+      - PULSE_COOKIE=/run/pulse/cookie
+    devices:
+      - "/dev/snd:/dev/snd"
+    user: "1000:1000"
+    group_add:
+      - audio
+
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: smart_turntable_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
