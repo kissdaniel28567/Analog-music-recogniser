@@ -468,6 +468,12 @@
     animation: slow-pulse 2.5s infinite ease-in-out;
 }
 
+.resync-highlight {
+    background-color: var(--primary) !important;
+    color: white !important;
+    animation: pulse-small 2s infinite;
+}
+
 /* =========================================
    LYRICS STYLING
    ========================================= */
@@ -510,6 +516,58 @@
     color: var(--primary);
     text-shadow: none;
     background-color: #fff;
+}
+
+.lyrics-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.sync-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 15px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
+}
+
+.sync-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sync-btn {
+    width: auto;
+    padding: 6px 12px;
+    background-color: var(--bg-input);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: var(--modern-btn-radius);
+    font-size: 0.85rem;
+    box-shadow: none;
+    transition: background 0.2s;
+}
+
+.sync-btn:hover {
+    background-color: var(--primary);
+    color: white;
+}
+
+[data-style="retro"] .sync-btn {
+    border-radius: 0;
+    border: 2px outset #fff;
+    background-color: #dfdfdf;
+    color: #000;
+}
+
+[data-style="retro"] .sync-btn:active {
+    border: 2px inset #fff;
 }
 
 /* --- RESPONSIVE --- */
