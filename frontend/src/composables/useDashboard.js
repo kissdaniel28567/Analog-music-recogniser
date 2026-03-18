@@ -25,6 +25,7 @@ export function useDashboard() {
     const maxHours = ref(1000);
     const lowThreshold = ref(150);
     const isAutoScrollEnabled = ref(true);
+    const rumble = ref(0);
 
     let socket = null;
 
@@ -152,6 +153,7 @@ export function useDashboard() {
             isPlaying.value = !!data.is_playing;
             isPaused.value = !!data.is_paused;
             currentRMS.value = data.rms || 0;
+            rumble.value = data.rumble || 0;
             hoursPlayed.value = data.total_hours || 0;
 
             // Track info
@@ -219,6 +221,7 @@ export function useDashboard() {
         totalClicks,
         currentClicks,
         currentRMS,
+        rumble,
         currentTrack,
         trackTime,
         trackDuration,
