@@ -7,6 +7,7 @@ class GlobalState:
     
     rms = 0.0
     current_clicks = 0
+    rumble = 0.0
     
     stop_thread = False
     failed_attempts = 0
