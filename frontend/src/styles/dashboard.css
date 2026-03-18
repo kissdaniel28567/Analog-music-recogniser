@@ -581,6 +581,11 @@
     border: 2px inset #fff;
 }
 
+.rumble-fill {
+    background: linear-gradient(to right, #f59e0b, #d97706) !important; /* Warning Orange */
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
 /* --- RESPONSIVE --- */
 @media (max-width: 900px) {
     .main-grid {
