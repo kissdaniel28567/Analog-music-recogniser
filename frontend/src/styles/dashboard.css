@@ -429,6 +429,11 @@
     border: 1px solid rgba(0,0,0,0.1);
 }
 
+.bar-container.rtl .bar-fill.low {
+  background: var(--danger, #e74c3c);
+}
+
+
 [data-style="retro"] .bar-container {
     border-radius: 0;
     border: 2px inset #fff;
