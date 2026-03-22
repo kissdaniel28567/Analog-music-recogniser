@@ -184,9 +184,14 @@ export function useDashboard() {
         });
 
         // ============ TRACK RESULT ============ 
-        socket.on('track_identified', (match) => {
+        socket.on('track_identified', async (match) => {
             if (match) {
                 currentTrack.value = match;
+                if (parsedLyrics.value.length > 0) {
+                    parsedLyrics.value = parseLRC(match.lyrics);
+                    isAutoScrollEnabled.value = true;
+                    await scrollToActive();
+                }
             }
             isDetecting.value = false;
         });
