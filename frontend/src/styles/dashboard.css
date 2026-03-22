@@ -507,21 +507,28 @@
 .lyrics-scroll::-webkit-scrollbar { width: 0px; }
 
 .lyric-line {
-    font-size: 1.2rem;
-    color: var(--text-muted);
+    font-size: clamp(1.1rem, 1.5vw, 1.4rem); 
+    color: var(--text-main);
     margin-bottom: 20px;
     transition: all 0.3s ease;
     cursor: default;
     font-weight: 500;
     opacity: 0.5;
+    transition: 
+        transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+        opacity 0.4s ease, 
+        color 0.4s ease,
+        filter 0.4s ease;
+
+    display: block;
+    transform-origin: center;
+    will-change: transform, opacity;
 }
 
 .lyric-line.active-lyric {
     color: var(--text-main);
-    font-size: 1.5rem;
-    font-weight: 800;
     opacity: 1;
-    transform: scale(1.05);
+    transform: scale(1.25);
     text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
 }[data-style="retro"] .lyric-line.active-lyric {
     color: var(--primary);
