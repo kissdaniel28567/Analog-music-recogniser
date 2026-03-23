@@ -1,28 +1,78 @@
 <template>
   <div class="dashboard-container">
-    
+
     <header class="top-nav">
       <div class="logo">👤 {{ profileData.username }}'s Profile</div>
       <button @click="router.push('/dashboard')" class="btn-secondary">Back to Player</button>
     </header>
 
     <main class="profile-grid">
-      
+
       <section class="panel">
         <h2>🎵 Listening History</h2>
         <div class="history-list">
           <div v-if="profileData.history.length === 0" class="empty-state">No tracks recorded yet.</div>
           <div v-for="(track, index) in profileData.history" :key="index" class="history-item">
-             <div class="track-name">{{ track.title }}</div>
-             <div class="track-meta">{{ track.artist }} • {{ track.time }}</div>
+            <div class="track-name">{{ track.title }}</div>
+            <div class="track-meta">{{ track.artist }} • {{ track.time }}</div>
           </div>
         </div>
 
-        <h2 style="margin-top: 30px;">📀 Cartridges</h2>
+        <h2>📀 Cartridge Management</h2>
+        <p class="help-text">Manage the lifespan of your needles.</p>
+
         <div class="cart-list">
-          <div v-for="cart in profileData.cartridges" :key="cart.name" class="cart-item" :class="{ active: cart.active }">
-             <span>{{ cart.name }}</span>
-             <strong>{{ cart.hours.toFixed(2) }} hrs</strong>
+          <div v-for="cart in profileData.cartridges" :key="cart.id" class="cart-item" :class="{ active: cart.active }">
+
+            <div class="cart-info">
+              <div v-for="cart in profileData.cartridges" :key="cart.id" class="cart-item"
+                :class="{ active: cart.active }">
+
+                <!-- A felső, mindig látható rész (Kattintható a lenyitáshoz) -->
+                <div class="cart-header" @click="toggleCartridge(cart.id)">
+                  <div class="cart-info">
+                    <span class="cart-name">
+                      {{ cart.name }}
+                      <span v-if="cart.active" class="active-badge">(Active)</span>
+                    </span>
+                    <span class="cart-usage">{{ cart.hours.toFixed(2) }} / {{ cart.recommended_hours }} Hours
+                      Used</span>
+                  </div>
+
+                  <!-- Kis ikon, ami mutatja, hogy lenyitható -->
+                  <div class="expand-icon" :class="{ rotated: expandedCartId === cart.id }">
+                    ▼
+                  </div>
+                </div>
+
+                <!-- A rejtett beállítások rész (Csak akkor látszik, ha kibontottuk) -->
+                <div class="cart-settings-panel" v-show="expandedCartId === cart.id">
+
+                  <!-- Bal oldal: Input -->
+                  <div class="settings-left">
+                    <label>Set Max Lifespan:</label>
+                    <div class="input-with-suffix">
+                      <input type="number" v-model="cart.recommended_hours" class="limit-input">
+                      <span>Hours</span>
+                    </div>
+                  </div>
+
+                  <!-- Jobb oldal: Gombok -->
+                  <div class="settings-right">
+                    <!-- Mentés gomb, paraméterként átadjuk a cart.id-t és az új értéket -->
+                    <button @click="updateCartridgeLimit(cart.id, cart.recommended_hours)" class="btn-save">
+                      💾 Save
+                    </button>
+
+                    <button @click="resetCartridge(cart.id)" class="btn-warn" title="Reset hours to zero">
+                      🔄 Reset Hours
+                    </button>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -30,9 +80,9 @@
       <!-- RIGHT COLUMN: Settings -->
       <section class="panel">
         <h2>⚙️ Hardware Settings</h2>
-        
+
         <form @submit.prevent="saveSettings" class="settings-form">
-          
+
           <div class="form-group">
             <label>Audio Input Device</label>
             <select v-model="settings.audio_device_id">
@@ -76,12 +126,15 @@ import '../styles/dashboard.css';
 import '../styles/profile.css';
 
 const {
-    router,
-    profileData,
-    settings,
-    devices,
-    isSaving,
-    saveSettings,
-    handleLogout
+  router,
+  profileData,
+  settings,
+  devices,
+  isSaving,
+  expandedCartId,
+  saveSettings,
+  handleLogout,
+  updateCartridgeLimit,
+  resetCartridge, toggleCartridge
 } = useProfile();
 </script>
