@@ -487,13 +487,13 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    padding: 2em;
+    padding: 1em;
 }
 
 .lyrics-scroll {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 20px 30px 150px 30px;
+    padding: 20px 0px 150px 0px;
     scroll-behavior: smooth;
     text-align: center;
 
@@ -513,6 +513,7 @@
     margin-bottom: 20px;
     transition: all 0.3s ease;
     cursor: default;
+    transform: scale(0.85);
     font-weight: 500;
     opacity: 0.5;
     transition: 
@@ -529,7 +530,7 @@
 .lyric-line.active-lyric {
     color: var(--text-main);
     opacity: 1;
-    transform: scale(1.25);
+    transform: scale(1);
     text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
 }[data-style="retro"] .lyric-line.active-lyric {
     color: var(--primary);
