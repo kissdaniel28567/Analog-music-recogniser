@@ -43,6 +43,7 @@ export function useDashboard() {
         if (isDetecting.value) return;
         console.log("🚀 Manual detection requested...");
         if (socket) socket.emit('manual_detect');
+        
         // server should change this in next iter. Might need to delete this
         isDetecting.value = true;
     };
@@ -169,6 +170,11 @@ export function useDashboard() {
             
             //console.log("Click histoty: " + clickHistory[0]);
             
+            if (data.recommended_hours) {
+                console.log("Max hours have been updated" + data.recommended_hours);
+                
+                maxHours.value = data.recommended_hours;
+            }
 
             if (data.current_track && data.current_track.title) {
                 currentTrack.value = data.current_track;
