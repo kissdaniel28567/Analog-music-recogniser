@@ -1,5 +1,5 @@
 import numpy as np
-from spicy.signal import butter, lfilter
+from spicy import signal
 
 class AudioProcessor:
     def __init__(self, sample_rate=44100):
@@ -147,7 +147,7 @@ class AudioProcessor:
         nyq = 0.5 * fs
         low = lowcut / nyq
         high = highcut / nyq
-        b, a = butter(order, [low, high], btype='band')
+        b, a = signal.butter(order, [low, high], btype='band')
         return b, a
     
     def detect_sibilance(self, indata, threshold=0.05):
@@ -162,7 +162,7 @@ class AudioProcessor:
         
         fs = self.sample_rate
         b, a = self._butter_bandpass(5000, 10000, fs, order=3)
-        filtered = lfilter(b, a, mono_data)
+        filtered = signal.lfilter(b, a, mono_data)
         band_rms = np.sqrt(np.mean(filtered**2))
         overall_rms = self.calculate_rms(indata)
         
