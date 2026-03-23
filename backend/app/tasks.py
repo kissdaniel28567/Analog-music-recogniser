@@ -190,18 +190,18 @@ def audio_processing_thread(app):
         last_commit_time = time.time()
         
         while not state.stop_thread:
-            if state.is_identifying:
-                time.sleep(1)
-                continue
+            #if state.is_identifying:
+            #    time.sleep(1)
+            #    continue
 
             try:
                 with sd.InputStream(channels=2, samplerate=SAMPLE_RATE, blocksize=BLOCK_SIZE) as stream:
                     active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
 
                     while not state.stop_thread:
-                        if state.is_identifying:
-                            time.sleep(1)
-                            continue
+                        #if state.is_identifying:
+                        #    time.sleep(1)
+                        #    continue
                         indata, overflow = stream.read(BLOCK_SIZE)
                         
                         current_rms_threshold = 0.01
