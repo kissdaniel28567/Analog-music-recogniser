@@ -40,7 +40,7 @@ def identify_and_save(app, device_id=None):
             track = result.get('track', {})
             new_title = track.get('title')
 
-            if state.current_track['title'] == new_title and state.failed_attempts < 5:
+            if state.current_track['title'] == new_title and state.failed_attempts < state.MAX_FAILED_ATTEMPTS:
                 if state.is_userdetect:
                     message = f"⚠️ Detected the same song again: {new_title}. If you think this is worng press detect again"
                     socketio.emit('info', message)
@@ -227,7 +227,7 @@ def audio_processing_thread(app):
                         state.sibilance = float(sibilance_val)
 
                         needs_retry = (state.is_playing
-                                       and 0 < state.failed_attempts < 5)
+                                       and 0 < state.failed_attempts < state.MAX_FAILED_ATTEMPTS)
                         
                         current_track_time = 0.0
                         if state.is_playing:
@@ -287,13 +287,17 @@ def audio_processing_thread(app):
                                 state.click_history =[]
                                 processor.is_playing = False
 
-                        if music_just_started or needs_retry:
+                        if music_just_started or needs_retry and not state.is_identifying:
                             print("🎵 Music start detected! Triggering identification...")
-                            state.song_start_time = time.time() - 1
-                            state.click_history = []
-
-                            state.is_userdetect = False
-                            threading.Thread(target=identify_and_save, args=(app,)).start()
+                            if music_just_started:
+                                state.current_track = {'title': '', 'artist': '', 'album': 'Unknown Album', 
+                                                       'cover': None, 'color': 'v-classic', 'lyrics': ''}
+                                state.song_start_time = time.time() - 1
+                                state.click_history = []
+                            threading.Thread(target=identify_and_save, 
+                                             args=(app, active_cart.owner.audio_device_id 
+                                                   if active_cart and active_cart.owner 
+                                                   else None)).start()
                             break
                         
                         # 4. WRITE TO DB
