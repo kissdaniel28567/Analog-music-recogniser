@@ -145,7 +145,7 @@
             <span class="stat-label">Remaining cartridge Hours</span>
 
             <div class="stat-value">
-              {{ Math.max(0, 1000 - hoursPlayed).toFixed(1) }} h
+              {{ Math.max(0, remainingHours - hoursPlayed).toFixed(1) }} h
             </div>
 
             <div class="bar-container rtl">
@@ -213,7 +213,8 @@ const {
   trackTime, clickHistory, trackDuration, parsedLyrics, activeLyricIndex, 
   lyricsContainerRef, maxHours, lowThreshold, remainingHours, remainingPercent, 
   isLowRemaining, isAutoScrollEnabled, currentRumble, currentSibilance, adjustSync, 
-  handleUserScroll, resyncLyrics, formatTime, setVinylColor
+  handleUserScroll, resyncLyrics, formatTime, setVinylColor, triggerManualDetect,
+  toggleUserMenu, handleLogout
 } = useDashboard();
 
 const {
