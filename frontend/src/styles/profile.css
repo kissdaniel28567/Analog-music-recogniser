@@ -28,14 +28,101 @@
 .track-meta { font-size: 0.85rem; color: var(--text-muted); }
 
 .cart-item {
-    display: flex;
+    display: block;
     justify-content: space-between;
-    padding: 10px;
+    padding: 0;
     background: var(--bg-input);
-    margin-bottom: 5px;
-    border-radius: 4px;
+    overflow: hidden;
+    transition: background-color 0.2s;
 }
 .cart-item.active { border-left: 4px solid var(--success); }
+
+.cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    cursor: pointer;
+}
+
+.cart-header:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.cart-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.expand-icon {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: transform 0.3s ease;
+}
+
+.expand-icon.rotated {
+    transform: rotate(180deg);
+}
+
+.cart-settings-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid var(--border-color);
+}
+
+.settings-left {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.settings-left label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.input-with-suffix {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.limit-input {
+    width: 80px;
+    padding: 6px;
+    margin: 0;
+    text-align: center;
+}
+
+.settings-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-save {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: var(--modern-btn-radius);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.btn-save:hover {
+    background-color: var(--primary-hover);
+}
+
+.btn-warn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
 
 .settings-form {
     display: flex;
