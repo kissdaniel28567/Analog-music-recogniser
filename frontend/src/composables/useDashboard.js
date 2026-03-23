@@ -163,10 +163,13 @@ export function useDashboard() {
 
             // Clicks
             currentClicks.value = data.click_count_now || 0;
-            clickHistory.value = data.click_history || [];
+            clickHistory.value = (data.click_history || []).filter(item => item && item.count !== undefined) || [];
             totalClicks.value = clickHistory.value.reduce((sum, item) => sum + item.count, 0);
             trackTime.value = data.track_time || 0;
             
+            //console.log("Click histoty: " + clickHistory[0]);
+            
+
             if (data.current_track && data.current_track.title) {
                 currentTrack.value = data.current_track;
                 parsedLyrics.value = parseLRC(data.current_track.lyrics);
