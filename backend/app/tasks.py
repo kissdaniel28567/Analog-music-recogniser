@@ -328,7 +328,8 @@ def audio_processing_thread(app):
                             'rumble': state.rumble,
                             'sibilance': state.sibilance,
                             'current_track': state.current_track,
-                            'total_hours': (active_cart.total_hours + (buffer_seconds/3600)) if active_cart else 0
+                            'total_hours': (active_cart.total_hours + (buffer_seconds/3600)) if active_cart else 0,
+                            'recommended_hours': active_cart.recommended_hours if active_cart else 1000
                         })
             except Exception as e:
                 print(f"❌ Stream Error: {e}")
