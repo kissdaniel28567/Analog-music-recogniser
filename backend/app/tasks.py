@@ -71,8 +71,8 @@ def identify_and_save(app, device_id=None):
                         apple_music_id = action['id']
                         break
             
-                if apple_music_id:
-                    try:
+                try:
+                    if apple_music_id:
                         url = f"https://itunes.apple.com/lookup?id={apple_music_id}"
                         req = urllib.request.Request(url, headers={'User-Agent': 'SmartTurntable/1.0'})
                         
@@ -80,20 +80,21 @@ def identify_and_save(app, device_id=None):
                             itunes_data = json.loads(response.read().decode())
                             
                             if itunes_data['resultCount'] > 0:
-                                itunes_result = itunes_data['results'][0]
-                                duration_ms = itunes_result['trackTimeMillis']
-                                state.track_duration = duration_ms / 1000.0
-
-                                fetched_album = itunes_result.get('collectionName')
-                                if fetched_album:
-                                    state.current_track['album'] = fetched_album
-                                print(f"⏱️ Exact duration: {state.track_duration}s | 💿 Album: {state.current_track['album']}")
+                                res = itunes_data['results'][0]
+                                state.track_duration = res.get('trackTimeMillis', 210000) / 1000.0
+                                state.current_track['album'] = res.get('collectionName', 'Unknown Album')
+                                art_url = res.get('artworkUrl100')
+                                if art_url:
+                                    state.current_track['cover'] = art_url.replace('100x100', '600x600')
+                                    
+                                print(f"✅ Exact Metadata via ID: {state.track_duration}s | Album: {state.current_track['album']}")
                             else:
-                                print("⚠️ ID lookup returned no duration, using fallbacks.")
-                    except Exception as e:
-                        print(f"⚠️ API lookup failed: {e}")
-                else:
-                    print("⚠️ No Apple Music ID in Shazam data, using 210s fallback.")
+                                print(f"⚠️ Apple ID {apple_music_id} not found in iTunes lookup.")
+                    else:
+                        print("⚠️ No Apple ID provided by recognition engines, using fallbacks.")
+                        
+                except Exception as e:
+                    print(f"⚠️ Metadata API failed: {e}")
 
                 with app.app_context():
                     active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
