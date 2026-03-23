@@ -119,7 +119,7 @@
               <span style="font-size: 0.7rem; color: var(--text-muted);">{{ currentRumble.toFixed(5) }}</span>
             </div>
             <div class="bar-container" style="height: 12px;">
-              <div class="bar-fill rumble-fill" :style="{ width: Math.min(currentRumble * 5000, 100) + '%' }"></div>
+              <div class="bar-fill rumble-fill" :style="{ width: Math.min(currentRumble * 0.005, 100) + '%' }"></div>
             </div>
             <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">
               Higher values indicate motor vibration or poor isolation.
