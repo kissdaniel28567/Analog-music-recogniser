@@ -16,6 +16,7 @@ export function useDashboard() {
     const totalClicks = ref(0);
     const currentClicks = ref(0);
     const currentRMS = ref(0);
+    const currentSibilance = ref(0);
     const currentTrack = ref({ title: '', artist: '', cover: null, color: 'v-classic' });
     const trackTime = ref(0);
     const trackDuration = ref(180);
@@ -25,7 +26,7 @@ export function useDashboard() {
     const maxHours = ref(1000);
     const lowThreshold = ref(150);
     const isAutoScrollEnabled = ref(true);
-    const rumble = ref(0);
+    const currentRumble = ref(0);
 
     let socket = null;
 
@@ -143,7 +144,6 @@ export function useDashboard() {
         return remainingHours.value < lowThreshold.value;
     });
 
-
     onMounted(() => {
         socket = io('http://localhost:5000');
 
@@ -153,7 +153,8 @@ export function useDashboard() {
             isPlaying.value = !!data.is_playing;
             isPaused.value = !!data.is_paused;
             currentRMS.value = data.rms || 0;
-            rumble.value = data.rumble || 0;
+            currentSibilance.value = data.sibilance || 0;
+            currentRumble.value = data.rumble || 0;
             hoursPlayed.value = data.total_hours || 0;
 
             // Track info
@@ -226,7 +227,8 @@ export function useDashboard() {
         totalClicks,
         currentClicks,
         currentRMS,
-        rumble,
+        currentSibilance,
+        currentRumble,
         currentTrack,
         trackTime,
         trackDuration,

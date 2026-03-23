@@ -116,14 +116,29 @@
           <div class="stat-item">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span class="stat-label">Mechanical Rumble (Low Freq)</span>
-              <span style="font-size: 0.7rem; color: var(--text-muted);">{{ rumble.toFixed(5) }}</span>
+              <span style="font-size: 0.7rem; color: var(--text-muted);">{{ currentRumble.toFixed(5) }}</span>
             </div>
             <div class="bar-container" style="height: 12px;">
-              <div class="bar-fill rumble-fill" :style="{ width: Math.min(rumble * 5000, 100) + '%' }"></div>
+              <div class="bar-fill rumble-fill" :style="{ width: Math.min(currentRumble * 5000, 100) + '%' }"></div>
             </div>
             <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">
               Higher values indicate motor vibration or poor isolation.
             </p>
+          </div>
+
+          <div class="stat-item">
+             <div style="display:flex; justify-content:space-between; align-items:center;">
+                 <span class="stat-label">High-Freq Harshness (Sibilance)</span>
+                 <span style="font-size: 0.7rem; color: var(--text-muted);">{{ currentSibilance.toFixed(3) }}</span>
+             </div>
+             <div class="bar-container" style="height: 12px;">
+                <div class="bar-fill" 
+                     :style="{ 
+                         width: (currentSibilance * 100) + '%', 
+                         backgroundColor: currentSibilance > 0.5 ? 'var(--danger)' : '#f59e0b' 
+                     }">
+                </div>
+             </div>
           </div>
           
           <div class="stat-item">
@@ -195,11 +210,10 @@ const themeStore = useThemeStore()
 const {
   authStore, showUserMenu, router, activeTab, isPlaying, isPaused,
   isDetecting, hoursPlayed, totalClicks, currentClicks, currentRMS, currentTrack,
-  trackTime, clickHistory, trackDuration, formatTime,
-  toggleUserMenu, handleLogout, triggerManualDetect, setVinylColor,
-  parsedLyrics, activeLyricIndex, lyricsContainerRef, maxHours,
-  lowThreshold, remainingHours, remainingPercent, isLowRemaining,
-  adjustSync, handleUserScroll, resyncLyrics, isAutoScrollEnabled, rumble
+  trackTime, clickHistory, trackDuration, parsedLyrics, activeLyricIndex, 
+  lyricsContainerRef, maxHours, lowThreshold, remainingHours, remainingPercent, 
+  isLowRemaining, isAutoScrollEnabled, currentRumble, currentSibilance, adjustSync, 
+  handleUserScroll, resyncLyrics, formatTime, setVinylColor
 } = useDashboard();
 
 const {
