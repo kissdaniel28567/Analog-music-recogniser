@@ -20,9 +20,7 @@ class Cartridge(db.Model):
     total_hours = db.Column(db.Float, default=0.0)
     total_clicks = db.Column(db.Integer, default=0)
     recommended_hours = db.Column(db.Integer, default=1000)
-
     is_active_on_turntable = db.Column(db.Boolean, default=False)
-    
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 class TrackHistory(db.Model):
