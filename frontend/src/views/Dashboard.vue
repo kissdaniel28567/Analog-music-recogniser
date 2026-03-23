@@ -116,7 +116,7 @@
           <div class="stat-item">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span class="stat-label">Mechanical Rumble (Low Freq)</span>
-              <span style="font-size: 0.7rem; color: var(--text-muted);">{{ currentRumble.toFixed(5) }}</span>
+              <span style="font-size: 0.7rem; color: var(--text-muted);">{{ (currentRumble * 0.05).toFixed(3) }}</span>
             </div>
             <div class="bar-container" style="height: 12px;">
               <div class="bar-fill rumble-fill" :style="{ width: Math.min(currentRumble * 0.005, 100) + '%' }"></div>
