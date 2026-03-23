@@ -1,4 +1,6 @@
 class GlobalState:
+    MAX_FAILED_ATTEMPTS = 3
+
     is_playing = False
     is_identifying = False
     current_track = {'title': '', 'artist': '', 'album': '', 'cover': None, 'color': 'v-classic', 'lyrics': ''}
