@@ -487,6 +487,7 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
+    padding: 2em;
 }
 
 .lyrics-scroll {
