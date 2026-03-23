@@ -229,16 +229,6 @@ def audio_processing_thread(app):
                         needs_retry = (state.is_playing
                                        and 0 < state.failed_attempts < 5)
                         
-                        if music_just_started or needs_retry:
-                            print("🎵 Music start detected! Triggering identification...")
-                            state.song_start_time = time.time() - 1
-                            state.click_history = []
-
-                            state.is_userdetect = False
-                            threading.Thread(target=identify_and_save, args=(app,)).start()
-                            break
-
-                        # 2. Auto-Detect Trigger
                         current_track_time = 0.0
                         if state.is_playing:
                             if state.song_start_time is None:
@@ -250,7 +240,7 @@ def audio_processing_thread(app):
                             if clicks > 0:
                                 event = {
                                     "time": round(current_track_time, 2),
-                                    "count": clicks
+                                    "count": int(clicks)
                                 }
                                 state.click_history.append(event)
                                 print(f"💥 Click detected at {event['time']}s: {clicks}")
@@ -296,6 +286,16 @@ def audio_processing_thread(app):
                                 state.failed_attempts = 0
                                 state.click_history =[]
                                 processor.is_playing = False
+
+                        if music_just_started or needs_retry:
+                            print("🎵 Music start detected! Triggering identification...")
+                            state.song_start_time = time.time() - 1
+                            state.click_history = []
+
+                            state.is_userdetect = False
+                            threading.Thread(target=identify_and_save, args=(app,)).start()
+                            break
+                        
                         # 4. WRITE TO DB
                         if time.time() - last_commit_time > DB_COMMIT_INTERVAL:
                             if buffer_seconds > 0:
@@ -323,8 +323,8 @@ def audio_processing_thread(app):
                             'rms': state.rms,
                             'track_time': current_track_time,
                             'track_duration': state.track_duration,
-                            'click_history': state.click_history,
-                            'click_count_now': state.current_clicks,
+                            'click_history':[dict(event) for event in state.click_history],
+                            'click_count_now': int(state.current_clicks),
                             'rumble': state.rumble,
                             'sibilance': state.sibilance,
                             'current_track': state.current_track,
