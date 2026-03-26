@@ -243,7 +243,7 @@ def audio_processing_thread(app):
 
                             if not state.scrobbled_current_track and state.current_track['title']:
                                 percent_played = current_track_time / state.track_duration
-                                if percent_played >= 0.5 or current_track_time >= 240:
+                                if percent_played >= 0.2 or current_track_time >= 240:
                                     state.scrobbled_current_track = True
                                     print(f"🎵 Scrobbling track to Last.fm: {state.current_track['title']}...")
                                     start_timestamp = int(time.time() - current_track_time)
