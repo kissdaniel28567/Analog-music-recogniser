@@ -79,6 +79,23 @@
 
       <!-- RIGHT COLUMN: Settings -->
       <section class="panel">
+        <hr class="divider" />
+        <h2>🔗 Integrations</h2>
+        <div class="form-group" style="background: var(--bg-input); padding: 15px; border-radius: 8px;">
+          <div v-if="profileData.lastfm?.connected">
+              <p>✅ Connected to Last.fm as <strong>{{ profileData.lastfm.username }}</strong></p>
+              <button @click="disconnectLastFm" class="btn-warn" style="margin-top: 10px;">Disconnect Last.fm</button>
+          </div>
+          <div v-else>
+              <p style="margin-bottom: 10px; color: var(--text-muted);">Connect your Last.fm account to automatically scrobble your vinyl records.</p>
+              <button @click="connectLastFm" class="btn-primary" style="background: #d51007; color: white;">
+                Connect Last.fm
+              </button>
+          </div>
+        </div>
+
+        <hr class="divider" />
+
         <h2>⚙️ Hardware Settings</h2>
 
         <form @submit.prevent="saveSettings" class="settings-form">
