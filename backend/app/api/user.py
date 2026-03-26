@@ -4,6 +4,9 @@ import sounddevice as sd
 from ..models import TrackHistory, Cartridge, User
 from ..extensions import db
 
+import pylast
+LASTFM_API_KEY = "YOUR_API_KEY_HERE"
+LASTFM_API_SECRET = "YOUR_SHARED_SECRET_HERE"
 user_bp = Blueprint('user', __name__)
 
 @user_bp.route('/profile', methods=['GET'])
@@ -18,6 +21,10 @@ def get_profile():
             'rms_threshold': current_user.rms_threshold,
             'click_sensitivity': current_user.click_sensitivity,
             'audio_device_id': current_user.audio_device_id
+        },
+        'lastfm': {
+            'connected': current_user.lastfm_session_key is not None,
+            'username': current_user.lastfm_username
         },
         'history':[{'title': h.title, 'artist': h.artist, 'time': h.timestamp.strftime("%Y-%m-%d %H:%M")} for h in history],
         'cartridges':[{'id': c.id, 'name': c.name, 'hours': c.total_hours, 
