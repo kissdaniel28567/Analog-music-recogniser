@@ -53,3 +53,34 @@ def get_devices():
     devices = sd.query_devices()
     dev_list = [{"id": i, "name": d['name']} for i, d in enumerate(devices) if d['max_input_channels'] > 0]
     return jsonify(dev_list)
+
+@user_bp.route('/lastfm/connect', methods=['POST'])
+@login_required
+def connect_lastfm():
+    token = request.json.get('token')
+    if not token:
+        return jsonify({"error": "No token provided"}), 400
+
+    try:
+        network = pylast.LastFMNetwork(api_key=LASTFM_API_KEY, api_secret=LASTFM_API_SECRET)
+        sg = pylast.SessionKeyGenerator(network)
+        
+        # Exchange the token for a permanent session key
+        session_key, username = sg.get_web_auth_session_key(url="", token=token)
+        
+        current_user.lastfm_session_key = session_key
+        current_user.lastfm_username = username
+        db.session.commit()
+        
+        return jsonify({"message": "Connected successfully!", "username": username})
+    except Exception as e:
+        print(f"Last.fm Auth Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@user_bp.route('/lastfm/disconnect', methods=['POST'])
+@login_required
+def disconnect_lastfm():
+    current_user.lastfm_session_key = None
+    current_user.lastfm_username = None
+    db.session.commit()
+    return jsonify({"message": "Disconnected"})
