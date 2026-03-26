@@ -5,6 +5,7 @@ import asyncio
 import urllib.request
 import urllib.parse
 import json
+from .services.lastfm_service import LastFmService
 
 from .extensions import db, socketio
 from .models import Cartridge, TrackHistory, AlbumColor
@@ -126,6 +127,7 @@ def identify_and_save(app, device_id=None):
                 if state.is_userdetect and state.temp_start_time is not None:
                     state.song_start_time = state.temp_start_time - 1
                     state.click_history =[]
+                    state.scrobbled_current_track = False
                     state.temp_start_time = None
 
                 state.failed_attempts = 0
@@ -155,6 +157,22 @@ def identify_and_save(app, device_id=None):
     state.is_identifying = False
     socketio.emit('track_identified', state.current_track if found_match else None)
     socketio.emit('status_change', {'status': 'listening'})
+
+def scrobble_track_async(app, track_data, session_key, start_timestamp):
+    """ Runs in a background thread to prevent pausing the audio loop """
+    with app.app_context():
+        service = LastFmService()
+        success = service.scrobble(
+            artist=track_data['artist'],
+            title=track_data['title'],
+            album=track_data.get('album'),
+            timestamp=start_timestamp,
+            session_key=session_key
+        )
+        if success:
+            print(f"✅ Successfully scrobbled '{track_data['title']}' to Last.fm!")
+        else:
+            print(f"⚠️ Failed to scrobble '{track_data['title']}' to Last.fm!")
 
 def audio_processing_thread(app):
     """
@@ -223,6 +241,17 @@ def audio_processing_thread(app):
                             current_track_time = time.time() - state.song_start_time
                             buffer_seconds += (BLOCK_SIZE / SAMPLE_RATE)
 
+                            if not state.scrobbled_current_track and state.current_track['title']:
+                                percent_played = current_track_time / state.track_duration
+                                if percent_played >= 0.5 or current_track_time >= 240:
+                                    state.scrobbled_current_track = True
+                                    print(f"🎵 Scrobbling track to Last.fm: {state.current_track['title']}...")
+                                    start_timestamp = int(time.time() - current_track_time)
+                                    threading.Thread(
+                                            target=scrobble_track_async, 
+                                            args=(app, state.current_track, active_cart.owner.lastfm_session_key, start_timestamp)
+                                        ).start()
+
                             if clicks > 0:
                                 event = {
                                     "time": round(current_track_time, 2),
@@ -248,6 +277,7 @@ def audio_processing_thread(app):
                                     state.failed_attempts = 0
                                     state.click_history =[]
                                     processor.is_playing = False
+                                    state.scrobbled_current_track = False
 
                             stop_detected = processor.check_silence_start(
                                 indata, 
@@ -271,6 +301,7 @@ def audio_processing_thread(app):
                                 state.song_start_time = None
                                 state.failed_attempts = 0
                                 state.click_history =[]
+                                state.scrobbled_current_track = False
                                 processor.is_playing = False
 
                         if music_just_started or needs_retry and not state.is_identifying:
