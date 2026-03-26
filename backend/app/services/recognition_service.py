@@ -55,7 +55,6 @@ class RecognitionService:
                 'artist': music.get('artists', [{}])[0].get('name'),
                 'ids': {
                     'apple': external.get('apple_music', {}).get('track', {}).get('id'),
-                    'spotify': external.get('spotify', {}).get('track', {}).get('id'),
                     'youtube': external.get('youtube', {}).get('vid')
                 }
             }
