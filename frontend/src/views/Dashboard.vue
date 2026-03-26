@@ -85,12 +85,14 @@
 
           <div v-else class="lyrics-wrapper">
             <div class="sync-controls">
+              <button @click="adjustSync(-1)" class="sync-btn" title="Move Lyrics Backward">-1s</button>
               <button @click="adjustSync(-0.25)" class="sync-btn" title="Move Lyrics Backward">-0.25s</button>
               <button v-if="!isAutoScrollEnabled" @click="resyncLyrics" class="sync-btn resync-highlight">
                 Resync
               </button>
               <span v-else class="sync-label">Auto-Following</span>
               <button @click="adjustSync(0.25)" class="sync-btn" title="Move Lyrics Forward">+0.25s</button>
+              <button @click="adjustSync(1)" class="sync-btn" title="Move Lyrics Forward">+1s</button>
             </div>
 
             <div class="lyrics-scroll" ref="lyricsContainerRef" @wheel="handleUserScroll" @touchstart="handleUserScroll"
@@ -119,7 +121,13 @@
               <span style="font-size: 0.7rem; color: var(--text-muted);">{{ (currentRumble * 0.05).toFixed(3) }}</span>
             </div>
             <div class="bar-container" style="height: 12px;">
-              <div class="bar-fill rumble-fill" :style="{ width: Math.min(currentRumble * 0.005, 100) + '%' }"></div>
+              <div 
+                  class="bar-fill rumble-fill" 
+                  :style="{ 
+                      width: Math.min(currentRumble * 0.005, 100) + '%',
+                      backgroundColor: (currentRumble * 0.005) > 75 ? 'var(--danger)' : '#f59e0b'
+                  }">
+              </div>
             </div>
             <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">
               Higher values indicate motor vibration or poor isolation.
