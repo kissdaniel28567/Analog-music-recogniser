@@ -170,9 +170,7 @@ export function useDashboard() {
             
             //console.log("Click histoty: " + clickHistory[0]);
             
-            if (data.recommended_hours) {
-                console.log("Max hours have been updated" + data.recommended_hours);
-                
+            if (data.recommended_hours) {                
                 maxHours.value = data.recommended_hours;
             }
 

@@ -88,7 +88,7 @@
           </div>
           <div v-else>
               <p style="margin-bottom: 10px; color: var(--text-muted);">Connect your Last.fm account to automatically scrobble your vinyl records.</p>
-              <button @click="connectLastFm" class="btn-primary" style="background: #d51007; color: white;">
+              <button @click="connectLastFm" class="btn-primary" style="background: #d8100657; color: white;">
                 Connect Last.fm
               </button>
           </div>
@@ -152,6 +152,7 @@ const {
   saveSettings,
   handleLogout,
   updateCartridgeLimit,
-  resetCartridge, toggleCartridge
+  resetCartridge, toggleCartridge,
+  connectLastFm, disconnectLastFm,
 } = useProfile();
 </script>
