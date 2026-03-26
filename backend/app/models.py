@@ -10,6 +10,9 @@ class User(UserMixin, db.Model):
     rms_threshold = db.Column(db.Float, default=0.01)
     click_sensitivity = db.Column(db.Float, default=15.0)
     audio_device_id = db.Column(db.Integer, nullable=True)
+
+    lastfm_username = db.Column(db.String(100), nullable=True)
+    lastfm_session_key = db.Column(db.String(100), nullable=True)
     
     cartridges = db.relationship('Cartridge', backref='owner', lazy=True)
     track_history = db.relationship('TrackHistory', backref='listener', lazy=True)
