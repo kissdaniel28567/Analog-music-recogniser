@@ -3,10 +3,8 @@ from flask_login import login_required, current_user
 import sounddevice as sd
 from ..models import TrackHistory, Cartridge, User
 from ..extensions import db
+from ..services.lastfm_service import LastFmService
 
-import pylast
-LASTFM_API_KEY = "27e187684baf9e1ba38abf679eb1c2b7"
-LASTFM_API_SECRET = "18b61b646c308956644e677a8ba46017"
 user_bp = Blueprint('user', __name__)
 
 @user_bp.route('/profile', methods=['GET'])
@@ -62,11 +60,9 @@ def connect_lastfm():
         return jsonify({"error": "No token provided"}), 400
 
     try:
-        network = pylast.LastFMNetwork(api_key=LASTFM_API_KEY, api_secret=LASTFM_API_SECRET)
-        sg = pylast.SessionKeyGenerator(network)
+        lastfm_service = LastFmService()
         
-        # Exchange the token for a permanent session key
-        session_key, username = sg.get_web_auth_session_key(url="", token=token)
+        session_key, username = lastfm_service.get_session_key(token)
         
         current_user.lastfm_session_key = session_key
         current_user.lastfm_username = username
@@ -74,7 +70,6 @@ def connect_lastfm():
         
         return jsonify({"message": "Connected successfully!", "username": username})
     except Exception as e:
-        print(f"Last.fm Auth Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 @user_bp.route('/lastfm/disconnect', methods=['POST'])
