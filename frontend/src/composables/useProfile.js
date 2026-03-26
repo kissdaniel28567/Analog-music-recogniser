@@ -13,7 +13,7 @@ export function useProfile() {
     const isSaving = ref(false);
     const expandedCartId = ref(null);
 
-    const LASTFM_API_KEY = "27e187684baf9e1ba38abf679eb1c2b7"; 
+    const LASTFM_API_KEY = "38a0db497a6bcbcc8794b2b12a5dc8fd"; 
     
     const loadData = async () => {
         try {
