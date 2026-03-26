@@ -35,3 +35,24 @@ def set_active_cartridge():
         return jsonify({"message": f"Active cartridge set to {target.name}"})
     
     return jsonify({"error": "Cartridge not found"}), 404
+
+@cart_bp.route('/<int:id>/update_limits', methods=['POST'])
+@login_required
+def update_cart_limits(id):
+    data = request.json
+    cart = Cartridge.query.filter_by(id=id, user_id=current_user.id).first()
+    if not cart: return jsonify({"error": "Not found"}), 404
+    
+    cart.recommended_hours = int(data.get('recommended_hours', cart.recommended_hours))
+    db.session.commit()
+    return jsonify({"message": "Limits updated"})
+
+@cart_bp.route('/<int:id>/reset', methods=['POST'])
+@login_required
+def reset_cart_hours(id):
+    cart = Cartridge.query.filter_by(id=id, user_id=current_user.id).first()
+    if not cart: return jsonify({"error": "Not found"}), 404
+    
+    cart.total_hours = 0.0
+    db.session.commit()
+    return jsonify({"message": "Hours reset to zero"})

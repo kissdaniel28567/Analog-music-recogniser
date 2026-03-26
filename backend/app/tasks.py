@@ -11,6 +11,7 @@ from .models import Cartridge, TrackHistory, AlbumColor
 from .audio.capture import AudioCapture
 from .audio.processing import AudioProcessor
 from .services.recognition_service import RecognitionService
+from .services.metadata_service import MetadataService
 
 from .state import state
 
@@ -40,7 +41,7 @@ def identify_and_save(app, device_id=None):
             track = result.get('track', {})
             new_title = track.get('title')
 
-            if state.current_track['title'] == new_title and state.failed_attempts < 5:
+            if state.current_track['title'] == new_title and state.failed_attempts < state.MAX_FAILED_ATTEMPTS:
                 if state.is_userdetect:
                     message = f"⚠️ Detected the same song again: {new_title}. If you think this is worng press detect again"
                     socketio.emit('info', message)
@@ -59,41 +60,26 @@ def identify_and_save(app, device_id=None):
 
                 # TODO: Might need to reset something else too
                 if state.is_userdetect and state.temp_start_time is not None:
-                    state.song_start_time = state.temp_start_time + 1
+                    state.song_start_time = state.temp_start_time - 1
                     state.click_history = []
                 
                 state.track_duration = 210.0
 
-                apple_music_id = None
-                hub = track.get('hub', {})
-                for action in hub.get('actions',[]):
-                    if action.get('type') == 'applemusicplay' and 'id' in action:
-                        apple_music_id = action['id']
-                        break
-            
-                if apple_music_id:
-                    try:
-                        url = f"https://itunes.apple.com/lookup?id={apple_music_id}"
-                        req = urllib.request.Request(url, headers={'User-Agent': 'SmartTurntable/1.0'})
-                        
-                        with urllib.request.urlopen(req, timeout=5) as response:
-                            itunes_data = json.loads(response.read().decode())
-                            
-                            if itunes_data['resultCount'] > 0:
-                                itunes_result = itunes_data['results'][0]
-                                duration_ms = itunes_result['trackTimeMillis']
-                                state.track_duration = duration_ms / 1000.0
-
-                                fetched_album = itunes_result.get('collectionName')
-                                if fetched_album:
-                                    state.current_track['album'] = fetched_album
-                                print(f"⏱️ Exact duration: {state.track_duration}s | 💿 Album: {state.current_track['album']}")
-                            else:
-                                print("⚠️ ID lookup returned no duration, using fallbacks.")
-                    except Exception as e:
-                        print(f"⚠️ API lookup failed: {e}")
-                else:
-                    print("⚠️ No Apple Music ID in Shazam data, using 210s fallback.")
+                if result:
+                    meta_service = MetadataService(spotify_client_id="YOUR_ID", spotify_secret="YOUR_SECRET")
+        
+                    metadata = meta_service.enrich(result['artist'], result['title'], result['ids'])
+                    
+                    if metadata:
+                        state.current_track.update({
+                            'title': result['title'],
+                            'artist': result['artist'],
+                            'album': metadata['album'],
+                            'cover': metadata['cover'],
+                            'color': 'v-classic'
+                        })
+                        state.track_duration = metadata['duration']
+                        print(f"✅ Metadata Enriched via {metadata['source']}")
 
                 with app.app_context():
                     active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
@@ -138,7 +124,7 @@ def identify_and_save(app, device_id=None):
                     print(f"⚠️ Lyrics API failed: {e}")
                 
                 if state.is_userdetect and state.temp_start_time is not None:
-                    state.song_start_time = state.temp_start_time + 1
+                    state.song_start_time = state.temp_start_time - 1
                     state.click_history =[]
                     state.temp_start_time = None
 
@@ -190,18 +176,18 @@ def audio_processing_thread(app):
         last_commit_time = time.time()
         
         while not state.stop_thread:
-            if state.is_identifying:
-                time.sleep(1)
-                continue
+            #if state.is_identifying:
+            #    time.sleep(1)
+            #    continue
 
             try:
                 with sd.InputStream(channels=2, samplerate=SAMPLE_RATE, blocksize=BLOCK_SIZE) as stream:
                     active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
 
                     while not state.stop_thread:
-                        if state.is_identifying:
-                            time.sleep(1)
-                            continue
+                        #if state.is_identifying:
+                        #    time.sleep(1)
+                        #    continue
                         indata, overflow = stream.read(BLOCK_SIZE)
                         
                         current_rms_threshold = 0.01
@@ -217,28 +203,22 @@ def audio_processing_thread(app):
                             indata, chunk_duration=BLOCK_SIZE/SAMPLE_RATE,
                             threshold=current_rms_threshold)
                         rms_volume = processor.calculate_rms(indata)
+                        rumble_value = processor.measure_rumble(indata)
+                        sibilance_val = processor.detect_sibilance(indata)
 
                         state.is_playing = processor.is_playing
                         state.rms = float(rms_volume)
                         state.current_clicks = clicks
+                        state.rumble = float(rumble_value)
+                        state.sibilance = float(sibilance_val)
 
                         needs_retry = (state.is_playing
-                                       and 0 < state.failed_attempts < 5)
+                                       and 0 < state.failed_attempts < state.MAX_FAILED_ATTEMPTS)
                         
-                        if music_just_started or needs_retry:
-                            print("🎵 Music start detected! Triggering identification...")
-                            state.song_start_time = time.time() + 1
-                            state.click_history = []
-
-                            state.is_userdetect = False
-                            threading.Thread(target=identify_and_save, args=(app,)).start()
-                            break
-
-                        # 2. Auto-Detect Trigger
                         current_track_time = 0.0
                         if state.is_playing:
                             if state.song_start_time is None:
-                                state.song_start_time = time.time() + 1
+                                state.song_start_time = time.time() - 1
                                 print("⏱️ Timer Started")
                             current_track_time = time.time() - state.song_start_time
                             buffer_seconds += (BLOCK_SIZE / SAMPLE_RATE)
@@ -246,7 +226,7 @@ def audio_processing_thread(app):
                             if clicks > 0:
                                 event = {
                                     "time": round(current_track_time, 2),
-                                    "count": clicks
+                                    "count": int(clicks)
                                 }
                                 state.click_history.append(event)
                                 print(f"💥 Click detected at {event['time']}s: {clicks}")
@@ -292,6 +272,20 @@ def audio_processing_thread(app):
                                 state.failed_attempts = 0
                                 state.click_history =[]
                                 processor.is_playing = False
+
+                        if music_just_started or needs_retry and not state.is_identifying:
+                            print("🎵 Music start detected! Triggering identification...")
+                            if music_just_started:
+                                state.current_track = {'title': '', 'artist': '', 'album': 'Unknown Album', 
+                                                       'cover': None, 'color': 'v-classic', 'lyrics': ''}
+                                state.song_start_time = time.time() - 1
+                                state.click_history = []
+                            threading.Thread(target=identify_and_save, 
+                                             args=(app, active_cart.owner.audio_device_id 
+                                                   if active_cart and active_cart.owner 
+                                                   else None)).start()
+                            break
+                        
                         # 4. WRITE TO DB
                         if time.time() - last_commit_time > DB_COMMIT_INTERVAL:
                             if buffer_seconds > 0:
@@ -319,10 +313,13 @@ def audio_processing_thread(app):
                             'rms': state.rms,
                             'track_time': current_track_time,
                             'track_duration': state.track_duration,
-                            'click_history': state.click_history,
-                            'click_count_now': state.current_clicks,
+                            'click_history':[dict(event) for event in state.click_history],
+                            'click_count_now': int(state.current_clicks),
+                            'rumble': state.rumble,
+                            'sibilance': state.sibilance,
                             'current_track': state.current_track,
-                            'total_hours': (active_cart.total_hours + (buffer_seconds/3600)) if active_cart else 0
+                            'total_hours': (active_cart.total_hours + (buffer_seconds/3600)) if active_cart else 0,
+                            'recommended_hours': active_cart.recommended_hours if active_cart else 1000
                         })
             except Exception as e:
                 print(f"❌ Stream Error: {e}")

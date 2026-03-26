@@ -1,4 +1,4 @@
-import { ref, computed, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
 import { io } from "socket.io-client";
@@ -7,7 +7,7 @@ export function useDashboard() {
     const authStore = useAuthStore();
     const router = useRouter();
     const showUserMenu = ref(false);
-    const activeTab = ref('diagnostics');
+    const activeTab = ref('lyrics');
 
     const isPlaying = ref(false);
     const isDetecting = ref(false);
@@ -16,12 +16,17 @@ export function useDashboard() {
     const totalClicks = ref(0);
     const currentClicks = ref(0);
     const currentRMS = ref(0);
+    const currentSibilance = ref(0);
     const currentTrack = ref({ title: '', artist: '', cover: null, color: 'v-classic' });
     const trackTime = ref(0);
     const trackDuration = ref(180);
     const clickHistory = ref([]);
     const parsedLyrics = ref([]);
     const lyricsContainerRef = ref(null);
+    const maxHours = ref(1000);
+    const lowThreshold = ref(150);
+    const isAutoScrollEnabled = ref(true);
+    const currentRumble = ref(0);
 
     let socket = null;
 
@@ -38,6 +43,7 @@ export function useDashboard() {
         if (isDetecting.value) return;
         console.log("🚀 Manual detection requested...");
         if (socket) socket.emit('manual_detect');
+        
         // server should change this in next iter. Might need to delete this
         isDetecting.value = true;
     };
@@ -47,6 +53,16 @@ export function useDashboard() {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const adjustSync = (offsetSeconds) => {
+        if (socket && isPlaying.value) {
+            console.log(`Tweaking sync by ${offsetSeconds}s`);
+            socket.emit('adjust_track_time', { offset: offsetSeconds });
+            
+            // Optimistic UI update for instant visual feedback
+            trackTime.value += offsetSeconds;
+        }
     };
 
     // ============ DISPLAY FOR LYRICS ============
@@ -71,6 +87,17 @@ export function useDashboard() {
         return parsed;
     };
 
+    const scrollToActive = async () => {
+        await nextTick(); 
+        
+        if (lyricsContainerRef.value) {
+            const activeEl = lyricsContainerRef.value.querySelector('.active-lyric');
+            if (activeEl) {
+                activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    };
+
     const activeLyricIndex = computed(() => {
         if (!parsedLyrics.value.length || parsedLyrics.value[0].time === -1) return -1;
         
@@ -82,13 +109,40 @@ export function useDashboard() {
         return 0;
     });
 
-    watch(activeLyricIndex, (newIndex) => {
-        if (newIndex >= 0 && lyricsContainerRef.value) {
-            const activeEl = lyricsContainerRef.value.querySelector('.active-lyric');
-            if (activeEl) {
-                activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+    watch(activeLyricIndex, () => {
+        if (isAutoScrollEnabled.value) {
+            scrollToActive();
         }
+    });
+
+    watch(activeTab, (newTab) => {
+        if (newTab === 'lyrics' && isAutoScrollEnabled.value) {
+            console.log("📋 Switched to lyrics tab, jumping to current line.");
+            scrollToActive();
+        }
+    });
+
+    const handleUserScroll = () => {
+        if (isAutoScrollEnabled.value) {
+            isAutoScrollEnabled.value = false;
+        }
+    };
+
+    const resyncLyrics = () => {
+        isAutoScrollEnabled.value = true;
+        scrollToActive();
+    };
+
+    const remainingHours = computed(() => {
+        return Math.max(0, maxHours.value - hoursPlayed.value);
+    });
+
+    const remainingPercent = computed(() => {
+        return (remainingHours.value / maxHours.value) * 100;
+    });
+
+    const isLowRemaining = computed(() => {
+        return remainingHours.value < lowThreshold.value;
     });
 
     onMounted(() => {
@@ -100,6 +154,8 @@ export function useDashboard() {
             isPlaying.value = !!data.is_playing;
             isPaused.value = !!data.is_paused;
             currentRMS.value = data.rms || 0;
+            currentSibilance.value = data.sibilance || 0;
+            currentRumble.value = data.rumble || 0;
             hoursPlayed.value = data.total_hours || 0;
 
             // Track info
@@ -108,10 +164,18 @@ export function useDashboard() {
 
             // Clicks
             currentClicks.value = data.click_count_now || 0;
-            clickHistory.value = data.click_history || [];
+            clickHistory.value = (data.click_history || []).filter(item => item && item.count !== undefined) || [];
             totalClicks.value = clickHistory.value.reduce((sum, item) => sum + item.count, 0);
             trackTime.value = data.track_time || 0;
             
+            //console.log("Click histoty: " + clickHistory[0]);
+            
+            if (data.recommended_hours) {
+                console.log("Max hours have been updated" + data.recommended_hours);
+                
+                maxHours.value = data.recommended_hours;
+            }
+
             if (data.current_track && data.current_track.title) {
                 currentTrack.value = data.current_track;
                 parsedLyrics.value = parseLRC(data.current_track.lyrics);
@@ -130,9 +194,14 @@ export function useDashboard() {
         });
 
         // ============ TRACK RESULT ============ 
-        socket.on('track_identified', (match) => {
+        socket.on('track_identified', async (match) => {
             if (match) {
                 currentTrack.value = match;
+                if (parsedLyrics.value.length > 0) {
+                    parsedLyrics.value = parseLRC(match.lyrics);
+                    isAutoScrollEnabled.value = true;
+                    await scrollToActive();
+                }
             }
             isDetecting.value = false;
         });
@@ -167,6 +236,8 @@ export function useDashboard() {
         totalClicks,
         currentClicks,
         currentRMS,
+        currentSibilance,
+        currentRumble,
         currentTrack,
         trackTime,
         trackDuration,
@@ -174,11 +245,20 @@ export function useDashboard() {
         parsedLyrics,
         activeLyricIndex,
         lyricsContainerRef,
+        maxHours,
+        lowThreshold,
+        remainingHours,
+        remainingPercent,
+        isLowRemaining,
+        isAutoScrollEnabled,
+        adjustSync,
+        handleUserScroll,
+        resyncLyrics,
         formatTime,
         toggleUserMenu,
         handleLogout,
         triggerManualDetect,
-        setVinylColor
+        setVinylColor,
     };
 }
 

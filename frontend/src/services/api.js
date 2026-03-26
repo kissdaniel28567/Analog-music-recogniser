@@ -33,5 +33,13 @@ export default {
     },
     getAudioDevices() {
         return apiClient.get('/api/user/devices');
+    },
+    resetCartridge(id) {
+        return apiClient.post(`/api/cartridges/${id}/reset`);
+    },
+    updateCartridgeLimit(id, recommended_hours) {
+        return apiClient.post(`/api/cartridges/${id}/update_limits`, { 
+            recommended_hours: recommended_hours 
+        });
     }
 };

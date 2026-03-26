@@ -71,3 +71,14 @@ def handle_set_vinyl_color(data):
                 db.session.add(new_color_record)
             
             db.session.commit()
+
+@socketio.on('adjust_track_time')
+def handle_adjust_track_time(data):
+    offset = data.get('offset', 0)
+    
+    if state.is_playing and state.song_start_time is not None:
+        try:
+            state.song_start_time -= float(offset)
+            print(f"⏱️ User adjusted lyric sync by {offset}s")
+        except ValueError:
+            pass

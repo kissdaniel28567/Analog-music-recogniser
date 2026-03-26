@@ -11,6 +11,7 @@ export function useProfile() {
     const settings = ref({ rms_threshold: 0.01, click_sensitivity: 15, audio_device_id: null });
     const devices = ref([]);
     const isSaving = ref(false);
+    const expandedCartId = ref(null);
     
     const loadData = async () => {
         try {
@@ -46,13 +47,46 @@ export function useProfile() {
         loadData();
     });
 
+    const resetCartridge = async (id) => {
+        if (confirm("Are you sure you want to reset this cartridge's hours to 0?")) {
+            try {
+                await api.resetCartridge(id);
+                loadData(); 
+            } catch (e) {
+                alert("Failed to reset hours.");
+            }
+        }
+    };
+
+    const updateCartridgeLimit = async (id, recommended_hours) => {
+        try {
+            await api.updateCartridgeLimit(id, recommended_hours);
+            alert("Cartridge settings saved!");
+            expandedCartId.value = null;
+        } catch (e) {
+            alert("Failed to update limit.");
+    }
+    };
+
+    const toggleCartridge = (id) => {
+        if (expandedCartId.value === id) {
+            expandedCartId.value = null;
+        } else {
+            expandedCartId.value = id;
+        }
+    };
+
     return {
         router,
         profileData,
         settings,
         devices,
         isSaving,
+        expandedCartId,
         saveSettings,
-        handleLogout
+        handleLogout,
+        resetCartridge,
+        updateCartridgeLimit,
+        toggleCartridge
     }
 }

@@ -1,4 +1,6 @@
 class GlobalState:
+    MAX_FAILED_ATTEMPTS = 3
+
     is_playing = False
     is_identifying = False
     current_track = {'title': '', 'artist': '', 'album': '', 'cover': None, 'color': 'v-classic', 'lyrics': ''}
@@ -7,6 +9,8 @@ class GlobalState:
     
     rms = 0.0
     current_clicks = 0
+    rumble = 0.0
+    sibilance = 0.0
     
     stop_thread = False
     failed_attempts = 0

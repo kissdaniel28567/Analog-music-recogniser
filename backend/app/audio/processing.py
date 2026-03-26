@@ -1,4 +1,5 @@
 import numpy as np
+from spicy import signal
 
 class AudioProcessor:
     def __init__(self, sample_rate=44100):
@@ -14,7 +15,6 @@ class AudioProcessor:
         """
         data_float = indata.astype(np.float32)
         
-        # RMS = square root of the mean of the squares
         rms = np.sqrt(np.mean(data_float**2))
         return rms
 
@@ -80,16 +80,13 @@ class AudioProcessor:
         Returns:
             int: The number of clicks detected in this chunk.
         """
-        # 1. Convert to mono for analysis
         if indata.shape[1] > 1:
             mono_data = np.mean(indata, axis=1)
         else:
             mono_data = indata.flatten()
 
-        # 2. Calculate the 'First Difference' (Derivative)
         diff = np.diff(mono_data)
 
-        # 3. Calculate Statistics
         abs_diff = np.abs(diff)
         mean_val = np.mean(abs_diff)
         std_dev = np.std(abs_diff)
@@ -97,7 +94,6 @@ class AudioProcessor:
         if std_dev == 0:
             return 0
 
-        # 4. Count outliers
         threshold = mean_val + (sensitivity * std_dev)
         
         click_mask = abs_diff > threshold
@@ -146,3 +142,33 @@ class AudioProcessor:
 
         rumble_energy = np.sum(np.abs(fft_spectrum[idx_low:idx_high]))
         return rumble_energy
+    
+    def _butter_bandpass(self, lowcut, highcut, fs, order=5):
+        nyq = 0.5 * fs
+        low = lowcut / nyq
+        high = highcut / nyq
+        b, a = signal.butter(order, [low, high], btype='band')
+        return b, a
+    
+    def detect_sibilance(self, indata, threshold=0.05):
+        """
+        Detects harsh high-frequency distortion (Sibilance).
+        Returns a value from 0 to 1 representing 'harshness'.
+        """
+        if indata.shape[1] > 1:
+            mono_data = np.mean(indata, axis=1)
+        else:
+            mono_data = indata.flatten()
+        
+        fs = self.sample_rate
+        b, a = self._butter_bandpass(5000, 10000, fs, order=3)
+        filtered = signal.lfilter(b, a, mono_data)
+        band_rms = np.sqrt(np.mean(filtered**2))
+        overall_rms = self.calculate_rms(indata)
+        
+        if overall_rms < 0.005: return 0.0
+        
+        ratio = band_rms / overall_rms
+        
+        harshness = np.clip((ratio - 0.2) * 2, 0, 1)
+        return float(harshness)

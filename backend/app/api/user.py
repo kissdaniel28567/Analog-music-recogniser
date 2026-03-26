@@ -20,7 +20,8 @@ def get_profile():
             'audio_device_id': current_user.audio_device_id
         },
         'history':[{'title': h.title, 'artist': h.artist, 'time': h.timestamp.strftime("%Y-%m-%d %H:%M")} for h in history],
-        'cartridges':[{'name': c.name, 'hours': c.total_hours, 'active': c.is_active_on_turntable} for c in carts]
+        'cartridges':[{'id': c.id, 'name': c.name, 'hours': c.total_hours, 
+                       'recommended_hours' : c.recommended_hours, 'active': c.is_active_on_turntable} for c in carts]
     })
 
 @user_bp.route('/settings', methods=['POST'])
@@ -31,7 +32,9 @@ def update_settings():
     current_user.click_sensitivity = float(data.get('click_sensitivity', current_user.click_sensitivity))
     
     device_id = data.get('audio_device_id')
-    if device_id is not None and str(device_id).strip() != "":
+    if device_id is None or str(device_id).strip() == "" or device_id == "null":
+        current_user.audio_device_id = None
+    else:
         current_user.audio_device_id = int(device_id)
         
     db.session.commit()

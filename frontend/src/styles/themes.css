@@ -2,7 +2,7 @@
     /* --- MODERN THEME (Rounded, Smooth, Gradients) --- */
     --modern-radius: 16px;
     --modern-btn-radius: 8px;
-    --modern-font: 'Inter', system-ui, sans-serif;
+    --modern-font: 'Montserrat', system-ui, sans-serif; 
     
     /* --- RETRO THEME (Boxy, Beveled, System Fonts) --- */
     --retro-radius: 0px;
