@@ -11,6 +11,7 @@ from .models import Cartridge, TrackHistory, AlbumColor
 from .audio.capture import AudioCapture
 from .audio.processing import AudioProcessor
 from .services.recognition_service import RecognitionService
+from .services.metadata_service import MetadataService
 
 from .state import state
 
@@ -64,37 +65,21 @@ def identify_and_save(app, device_id=None):
                 
                 state.track_duration = 210.0
 
-                apple_music_id = None
-                hub = track.get('hub', {})
-                for action in hub.get('actions',[]):
-                    if action.get('type') == 'applemusicplay' and 'id' in action:
-                        apple_music_id = action['id']
-                        break
-            
-                try:
-                    if apple_music_id:
-                        url = f"https://itunes.apple.com/lookup?id={apple_music_id}"
-                        req = urllib.request.Request(url, headers={'User-Agent': 'SmartTurntable/1.0'})
-                        
-                        with urllib.request.urlopen(req, timeout=5) as response:
-                            itunes_data = json.loads(response.read().decode())
-                            
-                            if itunes_data['resultCount'] > 0:
-                                res = itunes_data['results'][0]
-                                state.track_duration = res.get('trackTimeMillis', 210000) / 1000.0
-                                state.current_track['album'] = res.get('collectionName', 'Unknown Album')
-                                art_url = res.get('artworkUrl100')
-                                if art_url:
-                                    state.current_track['cover'] = art_url.replace('100x100', '600x600')
-                                    
-                                print(f"✅ Exact Metadata via ID: {state.track_duration}s | Album: {state.current_track['album']}")
-                            else:
-                                print(f"⚠️ Apple ID {apple_music_id} not found in iTunes lookup.")
-                    else:
-                        print("⚠️ No Apple ID provided by recognition engines, using fallbacks.")
-                        
-                except Exception as e:
-                    print(f"⚠️ Metadata API failed: {e}")
+                if result:
+                    meta_service = MetadataService(spotify_client_id="YOUR_ID", spotify_secret="YOUR_SECRET")
+        
+                    metadata = meta_service.enrich(result['artist'], result['title'], result['ids'])
+                    
+                    if metadata:
+                        state.current_track.update({
+                            'title': result['title'],
+                            'artist': result['artist'],
+                            'album': metadata['album'],
+                            'cover': metadata['cover'],
+                            'color': 'v-classic'
+                        })
+                        state.track_duration = metadata['duration']
+                        print(f"✅ Metadata Enriched via {metadata['source']}")
 
                 with app.app_context():
                     active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
