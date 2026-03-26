@@ -434,9 +434,8 @@
 }
 
 .bar-container.rtl .bar-fill.low {
-  background: var(--danger, #e74c3c);
+  background: var(--danger, #1afa25);
 }
-
 
 [data-style="retro"] .bar-container {
     border-radius: 0;
