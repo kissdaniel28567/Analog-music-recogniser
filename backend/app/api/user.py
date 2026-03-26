@@ -5,8 +5,8 @@ from ..models import TrackHistory, Cartridge, User
 from ..extensions import db
 
 import pylast
-LASTFM_API_KEY = "YOUR_API_KEY_HERE"
-LASTFM_API_SECRET = "YOUR_SHARED_SECRET_HERE"
+LASTFM_API_KEY = "27e187684baf9e1ba38abf679eb1c2b7"
+LASTFM_API_SECRET = "18b61b646c308956644e677a8ba46017"
 user_bp = Blueprint('user', __name__)
 
 @user_bp.route('/profile', methods=['GET'])
