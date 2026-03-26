@@ -25,7 +25,19 @@ class RecognitionService:
         try:
             out = await self.shazam.recognize(file_path)
             if len(out.get('matches', [])) > 0:
-                return out
+                track = out.get('track', {})
+            
+                apple_id = None
+                for action in track.get('hub', {}).get('actions',[]):
+                    if action.get('type') == 'applemusicplay':
+                        apple_id = action.get('id')
+                
+                return {
+                    'matches': [True],
+                    'title': track.get('title'),
+                    'artist': track.get('subtitle'),
+                    'ids': {'apple': apple_id, 'spotify': None, 'youtube': None}
+                }
         except Exception as e:
             print(f"⚠️ Shazam Error: {e}")
 
@@ -35,13 +47,16 @@ class RecognitionService:
         
         if acr_data.get('status', {}).get('msg') == 'Success':
             music = acr_data['metadata']['music'][0]
+            external = music.get('external_metadata', {})
+            
             return {
                 'matches': [True],
-                'track': {
-                    'title': music.get('title'),
-                    'subtitle': music.get('artists', [{}])[0].get('name'),
-                    'images': {'coverart': None},
-                    'hub': {'actions': []}
+                'title': music.get('title'),
+                'artist': music.get('artists', [{}])[0].get('name'),
+                'ids': {
+                    'apple': external.get('apple_music', {}).get('track', {}).get('id'),
+                    'spotify': external.get('spotify', {}).get('track', {}).get('id'),
+                    'youtube': external.get('youtube', {}).get('vid')
                 }
             }
             
