@@ -18,6 +18,19 @@ class AudioProcessor:
         rms = np.sqrt(np.mean(data_float**2))
         return rms
 
+    def calculate_stereo_rms(self, indata):
+        """
+        Calculates RMS separately for Left and Right channels.
+        indata shape is (frames, channels).
+        """
+        if indata.shape[0] == 0:
+            return 0.0, 0.0
+            
+        left_rms = np.sqrt(np.mean(indata[:, 0].astype(np.float32)**2)) if indata.shape[1] > 0 else 0.0
+        right_rms = np.sqrt(np.mean(indata[:, 1].astype(np.float32)**2)) if indata.shape[1] > 1 else left_rms
+        
+        return float(left_rms), float(right_rms)
+
     def check_music_start(self, indata, threshold=0.01, required_duration=0.5, chunk_duration=0.1):
         """
         Determines if music has started based on sustained volume.
