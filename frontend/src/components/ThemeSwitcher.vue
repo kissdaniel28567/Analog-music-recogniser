@@ -6,6 +6,9 @@
     <button @click="themeStore.toggleDarkMode" class="switch-btn">
       {{ themeStore.isDark ? '☀️ Light' : '🌙 Dark' }}
     </button>
+    <button @click="themeStore.toggleVuMeter" class="switch-btn">
+      {{ themeStore.showVuMeter ? 'Hide VU' : 'Show VU' }}
+    </button>
   </div>
 </template>
 
