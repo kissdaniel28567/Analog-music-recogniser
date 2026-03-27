@@ -221,6 +221,7 @@ def audio_processing_thread(app):
                             indata, chunk_duration=BLOCK_SIZE/SAMPLE_RATE,
                             threshold=current_rms_threshold)
                         rms_volume = processor.calculate_rms(indata)
+                        rms_l, rms_r = processor.calculate_stereo_rms(indata)
                         rumble_value = processor.measure_rumble(indata)
                         sibilance_val = processor.detect_sibilance(indata)
 
@@ -342,6 +343,8 @@ def audio_processing_thread(app):
                             'is_playing': state.is_playing,
                             'is_paused': state.is_paused,
                             'rms': state.rms,
+                            'rms_l': rms_l,
+                            'rms_r': rms_r,
                             'track_time': current_track_time,
                             'track_duration': state.track_duration,
                             'click_history':[dict(event) for event in state.click_history],
