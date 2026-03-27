@@ -192,6 +192,23 @@
         </div>
 
       </section>
+
+      <!-- VU METER -->
+      <section v-if="themeStore.showVuMeter" class="panel vu-panel vertical-vu">
+          <div class="vu-channel">
+            <div class="vu-led-bar">
+               <div class="vu-led-fill" :style="{ height: (currentRMS_L * 500) + '%' }"></div>
+            </div>
+            <span class="vu-label">L</span>
+          </div>
+          
+          <div class="vu-channel">
+            <div class="vu-led-bar">
+               <div class="vu-led-fill" :style="{ height: (currentRMS_L * 500) + '%' }"></div>
+            </div>
+            <span class="vu-label">R</span>
+          </div>
+        </section>
     </main>
 
     <div v-if="showMenu" class="custom-context-menu" :style="{ left: menuX + 'px', top: menuY + 'px' }">
@@ -217,12 +234,12 @@ const themeStore = useThemeStore()
 
 const {
   authStore, showUserMenu, router, activeTab, isPlaying, isPaused,
-  isDetecting, hoursPlayed, totalClicks, currentClicks, currentRMS, currentTrack,
-  trackTime, clickHistory, trackDuration, parsedLyrics, activeLyricIndex, 
+  isDetecting, hoursPlayed, totalClicks, currentClicks, currentRMS, currentRMS_L, currentRMS_R,
+  currentTrack, trackTime, clickHistory, trackDuration, parsedLyrics, activeLyricIndex, 
   lyricsContainerRef, maxHours, lowThreshold, remainingHours, remainingPercent, 
-  isLowRemaining, isAutoScrollEnabled, currentRumble, currentSibilance, adjustSync, 
-  handleUserScroll, resyncLyrics, formatTime, setVinylColor, triggerManualDetect,
-  toggleUserMenu, handleLogout
+  isLowRemaining, isAutoScrollEnabled, currentRumble, currentSibilance, 
+  adjustSync, handleUserScroll, resyncLyrics, formatTime, setVinylColor, 
+  triggerManualDetect, toggleUserMenu, handleLogout
 } = useDashboard();
 
 const {
