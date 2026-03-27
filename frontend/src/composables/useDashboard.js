@@ -16,6 +16,8 @@ export function useDashboard() {
     const totalClicks = ref(0);
     const currentClicks = ref(0);
     const currentRMS = ref(0);
+    const currentRMS_L = ref(0);
+    const currentRMS_R = ref(0);
     const currentSibilance = ref(0);
     const currentTrack = ref({ title: '', artist: '', cover: null, color: 'v-classic' });
     const trackTime = ref(0);
@@ -154,6 +156,8 @@ export function useDashboard() {
             isPlaying.value = !!data.is_playing;
             isPaused.value = !!data.is_paused;
             currentRMS.value = data.rms || 0;
+            currentRMS_L.value = data.rms_l || 0;
+            currentRMS_R.value = data.rms_r || 0;
             currentSibilance.value = data.sibilance || 0;
             currentRumble.value = data.rumble || 0;
             hoursPlayed.value = data.total_hours || 0;
@@ -234,6 +238,8 @@ export function useDashboard() {
         totalClicks,
         currentClicks,
         currentRMS,
+        currentRMS_L,
+        currentRMS_R,
         currentSibilance,
         currentRumble,
         currentTrack,
