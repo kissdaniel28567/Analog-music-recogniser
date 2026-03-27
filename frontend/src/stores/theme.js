@@ -3,7 +3,8 @@ import { defineStore } from 'pinia';
 export const useThemeStore = defineStore('theme', {
     state: () => ({
         isDark: localStorage.getItem('theme_dark') === 'true',
-        styleMode: localStorage.getItem('theme_style') || 'modern'
+        styleMode: localStorage.getItem('theme_style') || 'modern',
+        showVuMeter: localStorage.getItem('theme_vumeter') === 'true',
     }),
     actions: {
         toggleDarkMode() {
@@ -13,6 +14,10 @@ export const useThemeStore = defineStore('theme', {
         toggleStyleMode() {
             this.styleMode = this.styleMode === 'modern' ? 'retro' : 'modern';
             localStorage.setItem('theme_style', this.styleMode);
+        },
+        toggleVuMeter() {
+            this.showVuMeter = !this.showVuMeter;
+            localStorage.setItem('theme_vumeter', this.showVuMeter);
         }
     }
 });
