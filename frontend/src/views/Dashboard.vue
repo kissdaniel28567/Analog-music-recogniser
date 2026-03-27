@@ -191,20 +191,38 @@
 
         </div>
 
+        <!-- ANALOG VU METER -->
+        <div v-if="themeStore.showVuMeter && themeStore.styleMode === 'retro'" class="analog-vu-wrapper">
+          
+          <!-- Left Dial -->
+          <div class="analog-meter">
+            <div class="analog-scale"></div>
+            <div class="analog-needle" :style="{ transform: `rotate(${ -45 + Math.min(currentRMS_L * 500, 100) * 0.9 }deg)` }"></div>
+            <div class="analog-label">VU L</div>
+          </div>
+
+          <!-- Right Dial -->
+          <div class="analog-meter">
+            <div class="analog-scale"></div>
+            <div class="analog-needle" :style="{ transform: `rotate(${ -45 + Math.min(currentRMS_R * 500, 100) * 0.9 }deg)` }"></div>
+            <div class="analog-label">VU R</div>
+          </div>
+
+        </div>
       </section>
 
       <!-- VU METER -->
-      <section v-if="themeStore.showVuMeter" class="panel vu-panel vertical-vu">
+      <section v-if="themeStore.showVuMeter && themeStore.styleMode === 'modern'" class="panel vu-panel vertical-vu">
           <div class="vu-channel">
             <div class="vu-led-bar">
-               <div class="vu-led-fill" :style="{ height: Math.min(currentRMS_L * 800) + '%' }"></div>
+               <div class="vu-led-fill" :style="{ height: Math.min(currentRMS_L * 500, 100) + '%' }"></div>
             </div>
             <span class="vu-label">L</span>
           </div>
           
           <div class="vu-channel">
             <div class="vu-led-bar">
-               <div class="vu-led-fill" :style="{ height: Math.min(currentRMS_L * 800) + '%' }"></div>
+               <div class="vu-led-fill" :style="{ height: Math.min(currentRMS_R * 500, 100) + '%' }"></div>
             </div>
             <span class="vu-label">R</span>
           </div>
