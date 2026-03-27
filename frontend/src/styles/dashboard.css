@@ -429,7 +429,6 @@
     font-weight: 700;
 }
 
-/* VU Meter & Progress */
 .bar-container {
     height: 12px;
     background-color: var(--bg-input);
@@ -639,11 +638,17 @@
     flex-direction: column;
     justify-content: flex-end;
     overflow: hidden;
+
+    /* Container Queries (cqh) */
+    container-type: size; 
 }
 
 .vertical-vu .vu-led-fill {
     width: 100%;
     background: linear-gradient(to top, #10b981 60%, #f59e0b 85%, #ef4444 100%);
+    background-size: 100% 100cqh; 
+    background-position: bottom;
+    background-repeat: no-repeat;
     
     mask-image: repeating-linear-gradient(to top, #000 0px, #000 4px, transparent 4px, transparent 6px);
     -webkit-mask-image: repeating-linear-gradient(to top, #000 0px, #000 4px, transparent 4px, transparent 6px);
@@ -655,6 +660,93 @@
     border: 2px inset #fff;
     border-radius: 0;
     background-color: #000;
+}
+
+/* =========================================
+   RETRO ANALOG VU METERS
+   ========================================= */
+
+.analog-vu-wrapper {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 15px;
+    background-color: #c0c0c0;
+    border-top: 2px inset #fff;
+    flex-shrink: 0;
+}
+
+.analog-meter {
+    width: 140px;
+    height: 80px;
+    background-color: #fdf5e6;
+    border: 2px solid #000;
+    border-radius: 6px 6px 0 0;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4), 2px 2px 0 #fff;
+}
+
+.analog-scale {
+    position: absolute;
+    bottom: -30px;
+    left: 10%;
+    width: 80%;
+    height: 100px;
+    border-radius: 50%;
+    
+    border: 3px solid #333; 
+
+    border-right-color: #ef4444; 
+    box-sizing: border-box;
+    
+}
+
+.analog-scale::before, .analog-scale::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    width: 2px;
+    height: 8px;
+    background-color: #333;
+}
+.analog-scale::before { left: 15%; transform: rotate(-25deg); }
+.analog-scale::after { right: 15%; transform: rotate(25deg); background-color: #ef4444; }
+
+.analog-needle {
+    position: absolute;
+    bottom: -5px; 
+    left: calc(50% - 1px);
+    width: 2px;
+    height: 80px;
+    background-color: #111;
+    transform-origin: bottom center;
+    transition: transform 0.04s linear; 
+    box-shadow: 2px 0 3px rgba(0,0,0,0.5);
+    z-index: 10;
+}
+
+.analog-needle::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: -4px;
+    width: 10px;
+    height: 10px;
+    background-color: #000;
+    border-radius: 50%;
+}
+
+.analog-label {
+    position: absolute;
+    bottom: 5px;
+    width: 100%;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    font-family: 'Courier New', Courier, monospace;
+    color: #333;
+    z-index: 1;
 }
 
 /* --- RESPONSIVE --- */
