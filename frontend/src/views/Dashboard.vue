@@ -197,14 +197,14 @@
       <section v-if="themeStore.showVuMeter" class="panel vu-panel vertical-vu">
           <div class="vu-channel">
             <div class="vu-led-bar">
-               <div class="vu-led-fill" :style="{ height: (currentRMS_L * 500) + '%' }"></div>
+               <div class="vu-led-fill" :style="{ height: Math.min(currentRMS_L * 800) + '%' }"></div>
             </div>
             <span class="vu-label">L</span>
           </div>
           
           <div class="vu-channel">
             <div class="vu-led-bar">
-               <div class="vu-led-fill" :style="{ height: (currentRMS_L * 500) + '%' }"></div>
+               <div class="vu-led-fill" :style="{ height: Math.min(currentRMS_L * 800) + '%' }"></div>
             </div>
             <span class="vu-label">R</span>
           </div>
