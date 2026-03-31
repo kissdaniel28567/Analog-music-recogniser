@@ -43,3 +43,11 @@ class AlbumColor(db.Model):
     color_class = db.Column(db.String(50), nullable=False, default='v-classic')
     
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+class TrackOffset(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    artist = db.Column(db.String(200), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    offset_seconds = db.Column(db.Float, nullable=False, default=0.0)
+    
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
