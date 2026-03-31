@@ -5,6 +5,8 @@ class GlobalState:
     is_identifying = False
     current_track = {'title': '', 'artist': '', 'album': '', 'cover': None, 'color': 'v-classic', 'lyrics': ''}
     song_start_time = None
+    current_track_offset = 0.0
+    temp_start_time = None
     click_history = []
     
     rms = 0.0
@@ -18,6 +20,5 @@ class GlobalState:
     scrobbled_current_track = False
     is_userdetect = False
     is_paused = False
-    temp_start_time = None
 
 state = GlobalState()
