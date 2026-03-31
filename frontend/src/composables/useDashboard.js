@@ -62,8 +62,14 @@ export function useDashboard() {
             console.log(`Tweaking sync by ${offsetSeconds}s`);
             socket.emit('adjust_track_time', { offset: offsetSeconds });
             
-            // Optimistic UI update for instant visual feedback
             trackTime.value += offsetSeconds;
+        }
+    };
+
+    const resetSync = () => {
+        if (socket && isPlaying.value) {
+            console.log("🔄 Resetting track sync offset...");
+            socket.emit('reset_track_offset');
         }
     };
 
@@ -263,6 +269,7 @@ export function useDashboard() {
         handleLogout,
         triggerManualDetect,
         setVinylColor,
+        resetSync,
     };
 }
 
