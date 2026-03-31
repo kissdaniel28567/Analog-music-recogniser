@@ -2,7 +2,7 @@ import threading
 import time
 from flask import current_app
 from .extensions import socketio, db
-from .models import Cartridge, AlbumColor
+from .models import Cartridge, AlbumColor, TrackOffset
 from .state import state
 from .tasks import identify_and_save
 
@@ -74,11 +74,37 @@ def handle_set_vinyl_color(data):
 
 @socketio.on('adjust_track_time')
 def handle_adjust_track_time(data):
-    offset = data.get('offset', 0)
+    offset = float(data.get('offset', 0))
     
     if state.is_playing and state.song_start_time is not None:
-        try:
-            state.song_start_time -= float(offset)
-            print(f"⏱️ User adjusted lyric sync by {offset}s")
-        except ValueError:
-            pass
+        state.song_start_time -= offset
+        state.current_track_offset += offset
+        
+        print(f"⏱️ User adjusted lyric sync by {offset}s. Total offset: {state.current_track_offset}s")
+
+@socketio.on('reset_track_offset')
+def handle_reset_track_offset():
+    from .state import state
+    if state.is_playing and state.song_start_time is not None:
+        state.song_start_time += state.current_track_offset
+        state.current_track_offset = 0.0
+
+        if state.current_track.get('title'):
+            app = current_app._get_current_object()
+            with app.app_context():
+                try:
+                    active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
+                    if active_cart and active_cart.owner:
+                        record_to_delete = TrackOffset.query.filter_by(
+                            user_id=active_cart.owner.id,
+                            artist=state.current_track['artist'],
+                            title=state.current_track['title']
+                        ).first()
+                        
+                        if record_to_delete:
+                            db.session.delete(record_to_delete)
+                            db.session.commit()
+                            print("🗑️ Deleted track offset from database.")
+                except Exception as e:
+                    print(f"⚠️ Failed to delete offset from DB: {e}")
+                    db.session.rollback()
