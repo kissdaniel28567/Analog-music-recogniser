@@ -59,6 +59,10 @@
           <button @click="triggerManualDetect" :disabled="isDetecting">
             {{ isDetecting ? 'Identifying...' : '🔍 Detect Now' }}
           </button>
+
+          <button @click="resetSync" :disabled="!isPlaying" class="reset-sync-btn" title="Reset Lyrics Sync">
+            🔄 Reset Sync
+          </button>
         </div>
       </section>
 
@@ -257,7 +261,7 @@ const {
   lyricsContainerRef, maxHours, lowThreshold, remainingHours, remainingPercent, 
   isLowRemaining, isAutoScrollEnabled, currentRumble, currentSibilance, 
   adjustSync, handleUserScroll, resyncLyrics, formatTime, setVinylColor, 
-  triggerManualDetect, toggleUserMenu, handleLogout
+  triggerManualDetect, toggleUserMenu, handleLogout, resetSync
 } = useDashboard();
 
 const {
