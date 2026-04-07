@@ -1,4 +1,5 @@
 import threading
+import os
 import time
 import sounddevice as sd
 import asyncio
@@ -166,6 +167,9 @@ def identify_and_save(app, device_id=None):
         else:
             print("❌ No match found")
             state.failed_attempts += 1
+        
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
 
     # 6. Send to Frontend
     state.is_identifying = False
@@ -200,8 +204,6 @@ def audio_processing_thread(app):
     DB_COMMIT_INTERVAL = 10 
 
     processor = AudioProcessor(sample_rate=SAMPLE_RATE)
-    #song_start_time = None
-    #click_history = []
     buffer_seconds = 0.0
 
     with app.app_context():
