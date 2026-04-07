@@ -5,9 +5,10 @@ import asyncio
 import urllib.request
 import urllib.parse
 import json
+from .services.lastfm_service import LastFmService
 
 from .extensions import db, socketio
-from .models import Cartridge, TrackHistory, AlbumColor
+from .models import Cartridge, TrackHistory, AlbumColor, TrackOffset
 from .audio.capture import AudioCapture
 from .audio.processing import AudioProcessor
 from .services.recognition_service import RecognitionService
@@ -66,7 +67,7 @@ def identify_and_save(app, device_id=None):
                 state.track_duration = 210.0
 
                 if result:
-                    meta_service = MetadataService(spotify_client_id="YOUR_ID", spotify_secret="YOUR_SECRET")
+                    meta_service = MetadataService()
         
                     metadata = meta_service.enrich(result['artist'], result['title'], result['ids'])
                     
@@ -95,6 +96,20 @@ def identify_and_save(app, device_id=None):
                                 print(f"🎨 Loaded saved vinyl color: {saved_color_record.color_class}")
                             else:
                                 print("🎨 Something went wrong getting vinyl color")
+
+                            saved_offset_record = TrackOffset.query.filter_by(
+                                user_id=active_cart.owner.id,
+                                artist=state.current_track['artist'],
+                                title=state.current_track['title']
+                            ).first()
+                            
+                            if saved_offset_record:
+                                state.current_track_offset = saved_offset_record.offset_seconds
+                                if state.song_start_time is not None:
+                                    state.song_start_time -= state.current_track_offset
+                                print(f"⏱️ Loaded saved track offset: {state.current_track_offset}s")
+                            else:
+                                state.current_track_offset = 0.0
 
                 try:
                     artist_safe = urllib.parse.quote(state.current_track['artist'])
@@ -126,6 +141,7 @@ def identify_and_save(app, device_id=None):
                 if state.is_userdetect and state.temp_start_time is not None:
                     state.song_start_time = state.temp_start_time - 1
                     state.click_history =[]
+                    state.scrobbled_current_track = False
                     state.temp_start_time = None
 
                 state.failed_attempts = 0
@@ -156,6 +172,22 @@ def identify_and_save(app, device_id=None):
     socketio.emit('track_identified', state.current_track if found_match else None)
     socketio.emit('status_change', {'status': 'listening'})
 
+def scrobble_track_async(app, track_data, session_key, start_timestamp):
+    """ Runs in a background thread to prevent pausing the audio loop """
+    with app.app_context():
+        service = LastFmService()
+        success = service.scrobble(
+            artist=track_data['artist'],
+            title=track_data['title'],
+            album=track_data.get('album'),
+            timestamp=start_timestamp,
+            session_key=session_key
+        )
+        if success:
+            print(f"✅ Successfully scrobbled '{track_data['title']}' to Last.fm!")
+        else:
+            print(f"⚠️ Failed to scrobble '{track_data['title']}' to Last.fm!")
+
 def audio_processing_thread(app):
     """
     Background thread that captures audio, processes it, 
@@ -176,18 +208,11 @@ def audio_processing_thread(app):
         last_commit_time = time.time()
         
         while not state.stop_thread:
-            #if state.is_identifying:
-            #    time.sleep(1)
-            #    continue
-
             try:
                 with sd.InputStream(channels=2, samplerate=SAMPLE_RATE, blocksize=BLOCK_SIZE) as stream:
                     active_cart = Cartridge.query.filter_by(is_active_on_turntable=True).first()
 
                     while not state.stop_thread:
-                        #if state.is_identifying:
-                        #    time.sleep(1)
-                        #    continue
                         indata, overflow = stream.read(BLOCK_SIZE)
                         
                         current_rms_threshold = 0.01
@@ -203,6 +228,7 @@ def audio_processing_thread(app):
                             indata, chunk_duration=BLOCK_SIZE/SAMPLE_RATE,
                             threshold=current_rms_threshold)
                         rms_volume = processor.calculate_rms(indata)
+                        rms_l, rms_r = processor.calculate_stereo_rms(indata)
                         rumble_value = processor.measure_rumble(indata)
                         sibilance_val = processor.detect_sibilance(indata)
 
@@ -222,6 +248,16 @@ def audio_processing_thread(app):
                                 print("⏱️ Timer Started")
                             current_track_time = time.time() - state.song_start_time
                             buffer_seconds += (BLOCK_SIZE / SAMPLE_RATE)
+
+                            if not state.scrobbled_current_track and state.current_track['title']:
+                                percent_played = current_track_time / state.track_duration
+                                if percent_played >= 0.4 or current_track_time >= 240:
+                                    state.scrobbled_current_track = True
+                                    start_timestamp = int(time.time() - current_track_time)
+                                    threading.Thread(
+                                            target=scrobble_track_async, 
+                                            args=(app, state.current_track, active_cart.owner.lastfm_session_key, start_timestamp)
+                                        ).start()
 
                             if clicks > 0:
                                 event = {
@@ -243,16 +279,42 @@ def audio_processing_thread(app):
                                 
                                 if silence_detected:
                                     print("🛑 Silence detected at end of track! Resetting for next song...")
+                                    print(f"{state.current_track_offset=}, {state.current_track.get('title')=}")
+                                    if abs(state.current_track_offset) >= 1.0 and state.current_track.get('title'):
+                                        try:
+                                            if active_cart and active_cart.owner:
+                                                record = TrackOffset.query.filter_by(
+                                                    user_id=active_cart.owner.id,
+                                                    artist=state.current_track['artist'],
+                                                    title=state.current_track['title']
+                                                ).first()
+                                                
+                                                if record:
+                                                    record.offset_seconds = state.current_track_offset
+                                                else:
+                                                    new_record = TrackOffset(
+                                                        user_id=active_cart.owner.id,
+                                                        artist=state.current_track['artist'],
+                                                        title=state.current_track['title'],
+                                                        offset_seconds=state.current_track_offset
+                                                    )
+                                                    db.session.add(new_record)
+                                                db.session.commit()
+                                                print(f"💾 Saved final track offset ({state.current_track_offset}s) to DB.")
+                                        except Exception as e:
+                                            print(f"⚠️ Offset Save Error: {e}")
+                                            db.session.rollback()
                                     state.is_playing = False
                                     state.song_start_time = None
                                     state.failed_attempts = 0
                                     state.click_history =[]
                                     processor.is_playing = False
+                                    state.scrobbled_current_track = False
 
                             stop_detected = processor.check_silence_start(
                                 indata, 
                                 threshold=current_rms_threshold, 
-                                required_duration=10.0,
+                                required_duration=15.0,
                                 chunk_duration=BLOCK_SIZE/SAMPLE_RATE
                             )
 
@@ -271,7 +333,9 @@ def audio_processing_thread(app):
                                 state.song_start_time = None
                                 state.failed_attempts = 0
                                 state.click_history =[]
+                                state.scrobbled_current_track = False
                                 processor.is_playing = False
+                                state.current_track_offset = 0.0
 
                         if music_just_started or needs_retry and not state.is_identifying:
                             print("🎵 Music start detected! Triggering identification...")
@@ -280,6 +344,7 @@ def audio_processing_thread(app):
                                                        'cover': None, 'color': 'v-classic', 'lyrics': ''}
                                 state.song_start_time = time.time() - 1
                                 state.click_history = []
+                                state.current_track_offset = 0.0
                             threading.Thread(target=identify_and_save, 
                                              args=(app, active_cart.owner.audio_device_id 
                                                    if active_cart and active_cart.owner 
@@ -311,6 +376,8 @@ def audio_processing_thread(app):
                             'is_playing': state.is_playing,
                             'is_paused': state.is_paused,
                             'rms': state.rms,
+                            'rms_l': rms_l,
+                            'rms_r': rms_r,
                             'track_time': current_track_time,
                             'track_duration': state.track_duration,
                             'click_history':[dict(event) for event in state.click_history],

@@ -41,5 +41,11 @@ export default {
         return apiClient.post(`/api/cartridges/${id}/update_limits`, { 
             recommended_hours: recommended_hours 
         });
+    },
+    connectLastFm(token) {
+        return apiClient.post('/api/user/lastfm/connect', { token });
+    },
+    disconnectLastFm() {
+        return apiClient.post('/api/user/lastfm/disconnect');
     }
 };

@@ -146,6 +146,150 @@ select, input[type="range"] {
     width: 100%;
 }
 
+.divider {
+    border: 0;
+    height: 1px;
+    background: var(--border-color);
+    margin: 1em 0;
+    width: 100%;
+}
+
+.integration-card {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--app-radius);
+    overflow: hidden;
+    margin-top: 15px;
+}
+
+.integration-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.lastfm-icon {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: #93302b; 
+    letter-spacing: -0.5px;
+}
+
+.integration-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.integration-status.connected { color: var(--success); }
+.integration-status.disconnected { color: var(--text-muted); }
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--success);
+}
+
+.integration-body {
+    padding: 20px;
+}
+
+.integration-text {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+.integration-text strong {
+    color: var(--text-main);
+}
+
+/* Egyedi gomb a Last.fm-hez */
+.btn-lastfm {
+    background-color: #ab3d37;
+    color: white;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: var(--modern-btn-radius);
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-lastfm:hover {
+    background-color: #c64a46;
+}
+
+.btn-lastfm:active {
+    transform: scale(0.98);
+}
+
+.btn-disconnect {
+    background-color: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    width: auto;
+    padding: 8px 16px;
+    border-radius: var(--modern-btn-radius);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-disconnect:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+[data-style="retro"] .btn-lastfm {
+    border-radius: 0;
+    border: 2px outset #fff;
+    background-color: #bb4b45;
+    color: white;
+    box-shadow: none;
+}
+
+[data-style="retro"] .btn-lastfm:active {
+    border: 2px inset #fff;
+    transform: none;
+}[data-style="retro"] .btn-disconnect {
+    border-radius: 0;
+    border: 2px outset #fff;
+    background-color: #dfdfdf;
+    color: black;
+}
+
+[data-style="retro"] .btn-disconnect:active {
+    border: 2px inset #fff;
+}
+
+[data-style="retro"] .integration-card {
+    border-radius: 0;
+    border: 2px solid #000;
+    background-color: #dfdfdf;
+}
+
+[data-style="retro"] .integration-header {
+    background-color: #c0c0c0;
+    border-bottom: 2px solid #000;
+}
+
+[data-style="retro"] .integration-text,
+[data-style="retro"] .integration-status.disconnected {
+    color: #333;
+}
+
 .btn-secondary { background: var(--bg-input); color: var(--text-main); }
 .btn-danger { background: var(--danger); color: white; width: 100%; margin-top: 50px; }
 

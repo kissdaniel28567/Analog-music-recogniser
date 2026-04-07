@@ -3,8 +3,8 @@ import api from '../services/api';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
-        user: null,
-        isAuthenticated: false
+        user: localStorage.getItem('user_id') || null,
+        isAuthenticated: localStorage.getItem('is_auth') === 'true' || false
     }),
     actions: {
         async login(username, password) {
@@ -12,6 +12,9 @@ export const useAuthStore = defineStore('auth', {
                 const response = await api.login({ username, password });
                 this.user = response.data.user_id;
                 this.isAuthenticated = true;
+
+                localStorage.setItem('is_auth', 'true');
+                localStorage.setItem('user_id', this.user);
                 return true;
             } catch (error) {
                 console.error("Login failed", error);
@@ -31,11 +34,9 @@ export const useAuthStore = defineStore('auth', {
             await api.logout();
             this.user = null;
             this.isAuthenticated = false;
-        },
-        async logout() {
-            await api.logout();
-            this.user = null;
-            this.isAuthenticated = false;
+
+            localStorage.removeItem('is_auth');
+            localStorage.removeItem('user_id');
         }
     }
 });

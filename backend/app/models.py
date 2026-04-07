@@ -10,6 +10,9 @@ class User(UserMixin, db.Model):
     rms_threshold = db.Column(db.Float, default=0.01)
     click_sensitivity = db.Column(db.Float, default=15.0)
     audio_device_id = db.Column(db.Integer, nullable=True)
+
+    lastfm_username = db.Column(db.String(100), nullable=True)
+    lastfm_session_key = db.Column(db.String(100), nullable=True)
     
     cartridges = db.relationship('Cartridge', backref='owner', lazy=True)
     track_history = db.relationship('TrackHistory', backref='listener', lazy=True)
@@ -38,5 +41,13 @@ class AlbumColor(db.Model):
     artist = db.Column(db.String(200), nullable=False)
     album = db.Column(db.String(200), nullable=False)
     color_class = db.Column(db.String(50), nullable=False, default='v-classic')
+    
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+class TrackOffset(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    artist = db.Column(db.String(200), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    offset_seconds = db.Column(db.Float, nullable=False, default=0.0)
     
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

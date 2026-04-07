@@ -28,7 +28,6 @@
               <div v-for="cart in profileData.cartridges" :key="cart.id" class="cart-item"
                 :class="{ active: cart.active }">
 
-                <!-- A felső, mindig látható rész (Kattintható a lenyitáshoz) -->
                 <div class="cart-header" @click="toggleCartridge(cart.id)">
                   <div class="cart-info">
                     <span class="cart-name">
@@ -39,16 +38,13 @@
                       Used</span>
                   </div>
 
-                  <!-- Kis ikon, ami mutatja, hogy lenyitható -->
                   <div class="expand-icon" :class="{ rotated: expandedCartId === cart.id }">
                     ▼
                   </div>
                 </div>
 
-                <!-- A rejtett beállítások rész (Csak akkor látszik, ha kibontottuk) -->
                 <div class="cart-settings-panel" v-show="expandedCartId === cart.id">
 
-                  <!-- Bal oldal: Input -->
                   <div class="settings-left">
                     <label>Set Max Lifespan:</label>
                     <div class="input-with-suffix">
@@ -57,9 +53,7 @@
                     </div>
                   </div>
 
-                  <!-- Jobb oldal: Gombok -->
                   <div class="settings-right">
-                    <!-- Mentés gomb, paraméterként átadjuk a cart.id-t és az új értéket -->
                     <button @click="updateCartridgeLimit(cart.id, cart.recommended_hours)" class="btn-save">
                       💾 Save
                     </button>
@@ -79,6 +73,46 @@
 
       <!-- RIGHT COLUMN: Settings -->
       <section class="panel">
+        <hr class="divider" />
+        <h2>🔗 Integrations</h2>
+        
+        <div class="integration-card">
+          <div class="integration-header">
+            <div class="integration-logo">
+              <!-- Last.fm logó vagy csak stílusos szöveg -->
+              <span class="lastfm-icon">last.fm</span>
+            </div>
+            
+            <div v-if="profileData.lastfm?.connected" class="integration-status connected">
+              <span class="status-dot"></span> Connected
+            </div>
+            <div v-else class="integration-status disconnected">
+              Not Connected
+            </div>
+          </div>
+          
+          <div class="integration-body">
+            <div v-if="profileData.lastfm?.connected">
+              <p class="integration-text">
+                Automatically scrobbling your vinyl records as 
+                <strong>{{ profileData.lastfm.username }}</strong>.
+              </p>
+              <button @click="disconnectLastFm" class="btn-disconnect">Disconnect Account</button>
+            </div>
+            
+            <div v-else>
+              <p class="integration-text">
+                Connect your Last.fm account to automatically log your physical listening history to your digital profile.
+              </p>
+              <button @click="connectLastFm" class="btn-lastfm">
+                Connect Last.fm
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <hr class="divider" />
+
         <h2>⚙️ Hardware Settings</h2>
 
         <form @submit.prevent="saveSettings" class="settings-form">
@@ -135,6 +169,7 @@ const {
   saveSettings,
   handleLogout,
   updateCartridgeLimit,
-  resetCartridge, toggleCartridge
+  resetCartridge, toggleCartridge,
+  connectLastFm, disconnectLastFm,
 } = useProfile();
 </script>

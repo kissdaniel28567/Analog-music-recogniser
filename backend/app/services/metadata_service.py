@@ -5,15 +5,9 @@ from spotipy.oauth2 import SpotifyClientCredentials
 from ytmusicapi import YTMusic
 
 class MetadataService:
-    def __init__(self, spotify_client_id=None, spotify_secret=None):
+    def __init__(self):
         self.yt = YTMusic()
         self.sp = None
-        if spotify_client_id and spotify_secret:
-            try:
-                auth_manager = SpotifyClientCredentials(client_id=spotify_client_id, client_secret=spotify_secret)
-                self.sp = spotipy.Spotify(auth_manager=auth_manager)
-            except Exception as e:
-                print(f"⚠️ Spotify Auth Failed: {e}")
 
     def enrich(self, artist, title, external_ids):
         """ Fetching further data from external sources: Apple -> YT """
@@ -90,11 +84,9 @@ class MetadataService:
                 cover_url = None
                 thumbnails = track.get('thumbnails',[])
                 if thumbnails:
-                    # Get the default URL provided by YouTube
-                    base_url = thumbnails[-1].get('url', '')
-                    import re
-                    if '=' in base_url:
-                        cover_url = re.sub(r'=w\d+-h\d+', '=w600-h600', base_url)
+                    base_url = thumbnails[-1].get('url')
+                    if 'w120-h120' in base_url:
+                        cover_url = base_url.replace('w120-h120', 'w1000-h1000')
                     else:
                         cover_url = base_url
 

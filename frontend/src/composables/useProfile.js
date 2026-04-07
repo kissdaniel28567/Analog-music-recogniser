@@ -12,6 +12,8 @@ export function useProfile() {
     const devices = ref([]);
     const isSaving = ref(false);
     const expandedCartId = ref(null);
+
+    const LASTFM_API_KEY = "38a0db497a6bcbcc8794b2b12a5dc8fd"; 
     
     const loadData = async () => {
         try {
@@ -43,7 +45,19 @@ export function useProfile() {
         router.push('/login');
     };
     
-    onMounted(() => {
+    onMounted(async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if (token) {
+            try {
+                await api.connectLastFm(token);
+                window.history.replaceState({}, document.title, "/profile");
+                alert("Last.fm Connected!");
+            } catch(e) {
+                alert("Failed to connect Last.fm");
+            }
+        }
         loadData();
     });
 
@@ -76,6 +90,16 @@ export function useProfile() {
         }
     };
 
+    const connectLastFm = () => {
+        const callbackUrl = window.location.origin + '/profile';
+        window.location.href = `http://www.last.fm/api/auth/?api_key=${LASTFM_API_KEY}&cb=${callbackUrl}`;
+    };
+
+    const disconnectLastFm = async () => {
+        await api.disconnectLastFm();
+        loadData(); 
+    };
+
     return {
         router,
         profileData,
@@ -87,6 +111,8 @@ export function useProfile() {
         handleLogout,
         resetCartridge,
         updateCartridgeLimit,
-        toggleCartridge
+        toggleCartridge,
+        connectLastFm,
+        disconnectLastFm
     }
 }
