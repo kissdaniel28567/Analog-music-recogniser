@@ -88,7 +88,7 @@
           </p>
 
           <div v-else class="lyrics-wrapper">
-            <div class="sync-controls">
+            <div v-if="isLyricsSynced" class="sync-controls">
               <button @click="adjustSync(-1)" class="sync-btn" title="Move Lyrics Backward">-1s</button>
               <button @click="adjustSync(-0.25)" class="sync-btn" title="Move Lyrics Backward">-0.25s</button>
               <button v-if="!isAutoScrollEnabled" @click="resyncLyrics" class="sync-btn resync-highlight">
@@ -259,7 +259,7 @@ const {
   isDetecting, hoursPlayed, totalClicks, currentClicks, currentRMS, currentRMS_L, currentRMS_R,
   currentTrack, trackTime, clickHistory, trackDuration, parsedLyrics, activeLyricIndex, 
   lyricsContainerRef, maxHours, lowThreshold, remainingHours, remainingPercent, 
-  isLowRemaining, isAutoScrollEnabled, currentRumble, currentSibilance, 
+  isLowRemaining, isAutoScrollEnabled, isLyricsSynced, currentRumble, currentSibilance, 
   adjustSync, handleUserScroll, resyncLyrics, formatTime, setVinylColor, 
   triggerManualDetect, toggleUserMenu, handleLogout, resetSync
 } = useDashboard();
