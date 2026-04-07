@@ -328,11 +328,6 @@
     gap: 10px; 
 }
 
-/* --- 4. RIGHT PANEL (INFO) --- */
-/*.right-panel {
-     TODO: Create internal flex structure for tabs
-} */
-
 .timer-display {
     font-size: clamp(1.2rem, 2vw, 2.5rem);
     font-family: monospace;

@@ -46,7 +46,6 @@ export function useDashboard() {
         console.log("🚀 Manual detection requested...");
         if (socket) socket.emit('manual_detect');
         
-        // server should change this in next iter. Might need to delete this
         isDetecting.value = true;
     };
 
@@ -178,8 +177,6 @@ export function useDashboard() {
             totalClicks.value = clickHistory.value.reduce((sum, item) => sum + item.count, 0);
             trackTime.value = data.track_time || 0;
             
-            //console.log("Click histoty: " + clickHistory[0]);
-            
             if (data.recommended_hours) {                
                 maxHours.value = data.recommended_hours;
             }
@@ -187,8 +184,6 @@ export function useDashboard() {
             if (data.current_track && data.current_track.title) {
                 currentTrack.value = data.current_track;
                 parsedLyrics.value = parseLRC(data.current_track.lyrics);
-            } else if (!isDetecting.value) {
-                // TODO: Clear data if we are not busy looking for it
             }
         });
 
@@ -229,8 +224,6 @@ export function useDashboard() {
             socket.emit('set_vinyl_color', { color: colorClass });
         }
     };
-
-
 
     return {
         authStore,
