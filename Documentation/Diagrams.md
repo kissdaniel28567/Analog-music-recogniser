@@ -42,16 +42,28 @@ wbsDiagram {
 **** sockets.py <<file>>
 **** state.py <<file>>
 **** tasks.py <<file>>
+*** instance/
+**** turntable.db <<file>>
+**** turntable.db.-shm <<file>>
+**** turntable.db.-wal <<file>>
+*** tests/
+*** .asoundrc <<file>>
+*** .gitignore <<file>>
 *** Dockerfile <<file>>
 *** requirements.txt <<file>>
 *** run.py <<file>>
+
 ** frontend/
 *** src/
+**** assets/
+***** logo.svg <<file>>
 **** components/
 ***** ThemeSwitcher.vue <<file>>
 **** composables/
 ***** useDashboard.js <<file>>
 ***** useProfile.js <<file>>
+**** router/
+***** index.js <<file>>
 **** services/
 ***** api.js <<file>>
 **** stores/
@@ -69,11 +81,15 @@ wbsDiagram {
 ***** Register.vue <<file>>
 **** App.vue <<file>>
 **** main.js <<file>>
-**** router.js <<file>>
+*** .gitignore <<file>>
 *** Dockerfile <<file>>
+*** index.html <<file>>
+*** package-lock.json <<file>>
 *** package.json <<file>>
 *** vite.config.js <<file>>
+** .gitignore <<file>>
 ** docker-compose.yml <<file>>
+** README.md <<file>>
 
 @endwbs
 
@@ -288,42 +304,91 @@ node "Host Machine (Raspberry Pi / PC)" {
   
   node "Docker Engine" {
     
-    component "Frontend Container (Port 8080)" as front_cont {
-      [Nginx Web Server] as nginx[Vue.js SPA] as vue
-      nginx --> vue : Serves static files
+    component "Frontend Container" as front_cont {
+      [Nginx Web Server] as nginx
+      [Vue.js SPA] as vue
     }
     
-    component "Backend Container (Port 5000)" as back_cont {
-      [Gunicorn / Eventlet] as server[Flask API & WebSockets] as flask
-      [Audio Processing Thread] as audio_thread
-      database "turntable.db (SQLite)" as sqlite
-      
-      server --> flask
-      flask --> audio_thread : Spawns
-      flask --> sqlite : SQLAlchemy ORM
+    component "Backend Container" as back_cont {
+      [Flask API] as flask
+      [Audio Thread] as audio_thread
+      database "SQLite DB" as db
     }
+    
   }
   
-  interface "USB Port" as usb[USB Audio Interface] as adc
-}
-
-cloud "Internet" {
-  [ACRCloud / Shazam][Apple Music API]
-  [LRCLIB API]
-  [Last.fm API]
+  interface "USB Port" as usb
+  [USB Audio Interface] as adc
 }
 
 ' Physical connections
 adc -up-> usb : Analog to Digital
-usb -up-> audio_thread : /dev/snd (ALSA/Pulse) mapping
+usb -up-> audio_thread : /dev/snd mapping
 
 ' Network connections
 vue <--> flask : REST API & Socket.IO
-audio_thread --> [ACRCloud / Shazam] : HTTPS
-flask --> [Apple Music API] : HTTPS
+audio_thread -->[ACRCloud / Shazam] : HTTPS
+flask --> [Apple / YT Music API] : HTTPS
 flask -->[LRCLIB API] : HTTPS
 flask --> [Last.fm API] : HTTPS
 
+@enduml
+
+```
+
+---
+# Software Class Diagram 
+---
+
+```plantuml
+
+@startuml
+skinparam classAttributeIconSize 0
+
+class AudioProcessor {
+  - sample_rate: int
+  - consecutive_loud_duration: float
+  - track_end_silence_duration: float
+  + calculate_rms(indata: array): float
+  + check_music_start(indata: array, threshold: float): bool
+  + check_silence_start(indata: array, required_duration: float): bool
+  + detect_clicks(indata: array, sensitivity: float): int
+  + measure_rumble(indata: array): float
+  + detect_sibilance(indata: array): float
+}
+
+class RecognitionService {
+  - shazam: Shazam
+  - acr_recognizer: ACRCloudRecognizer
+  + identify_audio(file_path: str): dict
+}
+
+class MetadataService {
+  - yt: YTMusic
+  - _yt_duration_to_seconds(duration_str: str): float
+  + enrich(artist: str, title: str, external_ids: dict): dict
+  + fetch_apple(artist: str, title: str, apple_id: str): dict
+  + fetch_youtube(artist: str, title: str, youtube_id: str): dict
+}
+
+class LastFmService {
+  - api_key: str
+  - api_secret: str
+  + get_session_key(token: str): tuple
+  + scrobble(artist: str, title: str, timestamp: int, session_key: str): bool
+}
+
+class GlobalState {
+  + is_playing: bool
+  + is_identifying: bool
+  + current_track: dict
+  + song_start_time: float
+  + click_history: list
+  + current_track_offset: float
+}
+
+' Show dependencies (who uses whom)
+RecognitionService .down.> MetadataService : " passes IDs to"
 @enduml
 
 ```
