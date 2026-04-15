@@ -2,9 +2,17 @@
 
 \documentclass[12pt,a4paper,english]{report} 
 
+\usepackage[utf8]{inputenc}
+\usepackage[provide=*]{babel}
+\usepackage{microtype}
+\usepackage{graphicx}
+
 \title{Smart Turntable Assistant}
 \author{Daniel Kiss}
 \date{\today}
+
+\clubpenalty=100000
+\widowpenalty=100000
 
 \begin{document}
 
@@ -60,6 +68,13 @@ For the backend, Python was selected due to its extensive ecosystem for mathemat
 
 The frontend is implemented as a Single Page Application using Vue.js. Vue was chosen for its reactive component-based architecture, which allows the user interface to update instantly as underlying data changes. Global state management is handled by Pinia, ensuring that hardware settings, user authentication status, and current playback metadata remain perfectly synchronized across all application views.
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Images/folder.png}
+    \caption{Hierarchical overview of the project's decoupled directory structure.}
+    \label{fig:folders}
+\end{figure}
+
 \section{Real-Time Communication}
 
 A core requirement of the system is the ability to display hardware diagnostics and synchronized lyrics with zero perceptible latency. Traditional HTTP polling, where the client repeatedly requests data from the server, introduces significant network overhead and is entirely unsuitable for high-frequency audio visualization.
@@ -112,6 +127,14 @@ The following use cases illustrate the primary interactions between the listener
     \item \textbf{Visual Interface Customization:} While listening to a translucent red vinyl edition of an album, the user interacts with the digital visualizer to change the rendering style to match the physical record. The system commits this preference to memory, applying the same visual style automatically during future listening sessions of that album.
 \end{itemize}
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/usecase.png}
+    \caption{UML Use Case Diagram illustrating user and system interactions.}
+    \label{fig:usecase}
+\end{figure}
+
+
 \chapter{System Design and Architecture}
 
 The transformation of a continuous analog audio signal into a structured, interactive digital experience requires a highly decoupled and concurrent system architecture. This chapter details the structural design of the Smart Turntable Assistant, outlining the client-server communication protocols, the relational database schema, and the complex thread management required to process real-time telemetry alongside asynchronous network requests.
@@ -124,6 +147,13 @@ The frontend is a Single Page Application built with the Vue.js framework, servi
 
 Conversely, the continuous stream of audio diagnostics and playback timers necessitates a persistent, low-latency connection. This is achieved utilizing WebSockets through the Socket.IO library. By establishing a full-duplex communication channel, the backend can push mathematical calculations regarding volume, rumble, and sibilance to the frontend multiple times per second, ensuring the user interface remains highly responsive and synchronized with the physical turntable.
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Images/deployement.png}
+    \caption{Deployment diagram showing Docker containerization and hardware mapping.}
+    \label{fig:deployment}
+\end{figure}
+
 \section{Database Design}
 
 Persistent data storage is managed by a relational database system, specifically SQLite, integrated through the SQLAlchemy object-relational mapper. The schema is normalized to separate user credentials, hardware metrics, and historical listening habits securely.
@@ -132,6 +162,13 @@ At the core of the schema is the User entity, which maintains a one-to-many rela
 
 The TrackHistory table functions as a digital listening log, recording the identified artist, album, and high-resolution artwork uniform resource locator for every successful audio recognition event. To support the aesthetic and synchronization features of the application, the AlbumColor and TrackOffset tables store user-defined visual preferences and lyric timing calibrations, linking them specifically to the recognized artist and album. This relational structure ensures that when a user logs in, their active stylus limits and previous track modifications are instantly retrieved and applied to the global application state.
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Images/database.png}
+    \caption{Entity-Relationship Diagram of the SQLite database schema.}
+    \label{fig:database}
+\end{figure}
+
 \section{Concurrency and Thread Management}
 
 Analyzing live audio streams while simultaneously querying external web services presents a significant concurrency challenge. A purely synchronous approach would cause the application to block all diagnostic calculations and freeze the user interface while waiting for a network response from an audio fingerprinting service. To resolve this, the backend employs a multi-threaded architecture orchestrated around a centralized global state object.
@@ -139,6 +176,13 @@ Analyzing live audio streams while simultaneously querying external web services
 The primary audio processing thread runs continuously in the background. It reads distinct blocks of audio from the hardware buffer, calculates root mean square values, detects surface clicks, and updates the active cartridge usage statistics. When this primary thread mathematically determines that a new song has started based on sustained volume thresholds, it spawns an independent, parallel identification thread. 
 
 This secondary thread captures a temporary audio sample and manages the delayed network requests to fingerprinting engines and metadata enrichment application programming interfaces. Because multiple threads interact with the database simultaneously, the SQLite database is configured to use Write-Ahead Logging. This advanced concurrency mode permits the primary thread to safely commit cartridge wear statistics to the disk while the secondary identification thread is actively writing new track history records, completely eliminating database locking errors and ensuring seamless background operation.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Images/sequence.png}
+    \caption{UML Sequence Diagram detailing the multithreaded audio identification flow.}
+    \label{fig:sequence}
+\end{figure}
 
 \chapter{Implementation Details}
 
