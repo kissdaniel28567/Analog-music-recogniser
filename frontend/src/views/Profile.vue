@@ -18,8 +18,12 @@
           </div>
         </div>
 
-        <h2>📀 Cartridges </h2>
-        <button @click="showNewCartModal = true" class="btn-primary" style="margin: 0; padding: 6px 12px; width: auto;">+ New</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px; margin-bottom: 10px;">
+           <h2 style="margin: 0;">📀 Cartridges</h2>
+           <button @click="showNewCartModal = true" class="btn-primary" style="width: auto; padding: 5px 15px; margin: 0; font-size: 0.9rem;">
+            New
+           </button>
+        </div>
         <div class="cart-list">
           <div v-for="cart in profileData.cartridges" :key="cart.id" class="cart-item" :class="{ active: cart.active }">
 
@@ -46,7 +50,7 @@
 
               <div class="settings-right" style="flex-direction: row; flex-wrap: wrap;">
                 <button v-if="!cart.active" @click="activateCartridge(cart.id)" class="btn-activate">
-                  🎯 Activate
+                  🟢 Activate
                 </button>
                 <span v-else class="active-badge" style="align-self: center; font-weight: bold;">Currently In Use</span>
 
