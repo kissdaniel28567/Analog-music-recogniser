@@ -54,4 +54,7 @@ export default {
     setActiveCartridge(id) {
         return apiClient.post('/api/cartridges/set_active', { cartridge_id: id });
     },
+    deleteCartridge(id) {
+        return apiClient.delete(`/api/cartridges/${id}/delete`);
+    }
 };

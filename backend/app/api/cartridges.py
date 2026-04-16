@@ -80,3 +80,25 @@ def add_cartridge():
     db.session.commit()
     
     return jsonify({"message": f"Cartridge '{name}' added successfully!"}), 201
+
+@cart_bp.route('/<int:id>/delete', methods=['DELETE'])
+@login_required
+def delete_cartridge(id):
+    cart_to_delete = Cartridge.query.filter_by(id=id, user_id=current_user.id).first()
+    if not cart_to_delete: 
+        return jsonify({"error": "Cartridge not found"}), 404
+        
+    # Prevent deleting if it's the only cartridge they own
+    user_carts = Cartridge.query.filter_by(user_id=current_user.id).count()
+    if user_carts <= 1:
+        return jsonify({"error": "You cannot delete your only cartridge!"}), 400
+
+    if cart_to_delete.is_active_on_turntable:
+        fallback_cart = Cartridge.query.filter_by(user_id=current_user.id).filter(Cartridge.id != id).first()
+        if fallback_cart:
+            fallback_cart.is_active_on_turntable = True
+            
+    db.session.delete(cart_to_delete)
+    db.session.commit()
+    
+    return jsonify({"message": "Cartridge deleted successfully"})
