@@ -121,6 +121,17 @@ export function useProfile() {
         }
     };
 
+    const deleteCartridge = async (id) => {
+        if (confirm("Are you sure you want to permanently delete this cartridge? This cannot be undone.")) {
+            try {
+                await api.deleteCartridge(id);
+                loadData();
+            } catch (e) {
+                alert(e.response?.data?.error || "Failed to delete cartridge.");
+            }
+        }
+    };
+
 
     return {
         router,
@@ -131,6 +142,7 @@ export function useProfile() {
         expandedCartId,
         showNewCartModal,
         newCartData,
+        deleteCartridge,
         saveSettings,
         handleLogout,
         resetCartridge,

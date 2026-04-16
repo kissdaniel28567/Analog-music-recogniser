@@ -61,6 +61,10 @@
                 <button @click="resetCartridge(cart.id)" class="btn-warn" title="Reset hours to zero">
                   🔄 Reset
                 </button>
+
+                <button @click="deleteCartridge(cart.id)" class="btn-warn" title="Delete Cartridge">
+                  ❌ Delete
+                </button>
               </div>
 
             </div>
@@ -183,6 +187,7 @@ const {
   expandedCartId,
   showNewCartModal,
   newCartData,
+  deleteCartridge,
   addNewCartridge,
   activateCartridge,
   saveSettings,
