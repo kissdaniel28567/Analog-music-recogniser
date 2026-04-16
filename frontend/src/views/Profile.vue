@@ -18,54 +18,47 @@
           </div>
         </div>
 
-        <h2>📀 Cartridge Management</h2>
-        <p class="help-text">Manage the lifespan of your needles.</p>
-
+        <h2>📀 Cartridges </h2>
+        <button @click="showNewCartModal = true" class="btn-primary" style="margin: 0; padding: 6px 12px; width: auto;">+ New</button>
         <div class="cart-list">
           <div v-for="cart in profileData.cartridges" :key="cart.id" class="cart-item" :class="{ active: cart.active }">
 
-            <div class="cart-info">
-              <div v-for="cart in profileData.cartridges" :key="cart.id" class="cart-item"
-                :class="{ active: cart.active }">
-
-                <div class="cart-header" @click="toggleCartridge(cart.id)">
-                  <div class="cart-info">
-                    <span class="cart-name">
-                      {{ cart.name }}
-                      <span v-if="cart.active" class="active-badge">(Active)</span>
-                    </span>
-                    <span class="cart-usage">{{ cart.hours.toFixed(2) }} / {{ cart.recommended_hours }} Hours
-                      Used</span>
-                  </div>
-
-                  <div class="expand-icon" :class="{ rotated: expandedCartId === cart.id }">
-                    ▼
-                  </div>
-                </div>
-
-                <div class="cart-settings-panel" v-show="expandedCartId === cart.id">
-
-                  <div class="settings-left">
-                    <label>Set Max Lifespan:</label>
-                    <div class="input-with-suffix">
-                      <input type="number" v-model="cart.recommended_hours" class="limit-input">
-                      <span>Hours</span>
-                    </div>
-                  </div>
-
-                  <div class="settings-right">
-                    <button @click="updateCartridgeLimit(cart.id, cart.recommended_hours)" class="btn-save">
-                      💾 Save
-                    </button>
-
-                    <button @click="resetCartridge(cart.id)" class="btn-warn" title="Reset hours to zero">
-                      🔄 Reset Hours
-                    </button>
-                  </div>
-
-                </div>
-
+            <div class="cart-header" @click="toggleCartridge(cart.id)">
+              <div class="cart-info">
+                <span class="cart-name">
+                  {{ cart.name }}
+                  <span v-if="cart.active" class="active-badge">(Active)</span>
+                </span>
+                <span class="cart-usage">{{ cart.hours.toFixed(2) }} / {{ cart.recommended_hours }} Hours Used</span>
               </div>
+              <div class="expand-icon" :class="{ rotated: expandedCartId === cart.id }">▼</div>
+            </div>
+
+            <div class="cart-settings-panel" v-show="expandedCartId === cart.id">
+              
+              <div class="settings-left">
+                <label>Set Max Lifespan:</label>
+                <div class="input-with-suffix">
+                  <input type="number" v-model="cart.recommended_hours" class="limit-input">
+                  <span>Hours</span>
+                </div>
+              </div>
+
+              <div class="settings-right" style="flex-direction: row; flex-wrap: wrap;">
+                <button v-if="!cart.active" @click="activateCartridge(cart.id)" class="btn-activate">
+                  🎯 Activate
+                </button>
+                <span v-else class="active-badge" style="align-self: center; font-weight: bold;">Currently In Use</span>
+
+                <button @click="updateCartridgeLimit(cart.id, cart.recommended_hours)" class="btn-save">
+                  💾 Save
+                </button>
+
+                <button @click="resetCartridge(cart.id)" class="btn-warn" title="Reset hours to zero">
+                  🔄 Reset
+                </button>
+              </div>
+
             </div>
           </div>
         </div>
@@ -79,7 +72,6 @@
         <div class="integration-card">
           <div class="integration-header">
             <div class="integration-logo">
-              <!-- Last.fm logó vagy csak stílusos szöveg -->
               <span class="lastfm-icon">last.fm</span>
             </div>
             
@@ -151,6 +143,25 @@
       </section>
 
     </main>
+    <div v-if="showNewCartModal" class="modal-overlay" @click.self="showNewCartModal = false">
+      <div class="modal-content card">
+        <h3>Add New Cartridge</h3>
+        <form @submit.prevent="addNewCartridge" class="settings-form">
+          <div class="form-group">
+            <label>Cartridge Model/Name</label>
+            <input type="text" v-model="newCartData.name" placeholder="e.g., Ortofon 2M Red" required />
+          </div>
+          <div class="form-group">
+            <label>Recommended Lifespan (Hours)</label>
+            <input type="number" v-model="newCartData.recommended_hours" min="100" required />
+          </div>
+          <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button type="button" @click="showNewCartModal = false" class="btn-secondary">Cancel</button>
+            <button type="submit" class="btn-primary" style="margin-top: 0;">Add Cartridge</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -166,6 +177,10 @@ const {
   devices,
   isSaving,
   expandedCartId,
+  showNewCartModal,
+  newCartData,
+  addNewCartridge,
+  activateCartridge,
   saveSettings,
   handleLogout,
   updateCartridgeLimit,
