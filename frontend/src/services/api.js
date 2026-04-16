@@ -47,5 +47,11 @@ export default {
     },
     disconnectLastFm() {
         return apiClient.post('/api/user/lastfm/disconnect');
-    }
+    },
+    addCartridge(cartData) {
+        return apiClient.post('/api/cartridges/add', cartData);
+    },
+    setActiveCartridge(id) {
+        return apiClient.post('/api/cartridges/set_active', { cartridge_id: id });
+    },
 };
