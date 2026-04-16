@@ -56,3 +56,27 @@ def reset_cart_hours(id):
     cart.total_hours = 0.0
     db.session.commit()
     return jsonify({"message": "Hours reset to zero"})
+
+@cart_bp.route('/add', methods=['POST'])
+@login_required
+def add_cartridge():
+    data = request.json
+    name = data.get('name')
+    recommended_hours = data.get('recommended_hours', 1000)
+    
+    if not name or str(name).strip() == "":
+        return jsonify({"error": "Cartridge name is required"}), 400
+        
+    new_cart = Cartridge(
+        name=name.strip(),
+        recommended_hours=int(recommended_hours),
+        user_id=current_user.id,
+        total_hours=0.0,
+        total_clicks=0,
+        is_active_on_turntable=False # Inactive at defult, this might change in the future. 
+    )
+    
+    db.session.add(new_cart)
+    db.session.commit()
+    
+    return jsonify({"message": f"Cartridge '{name}' added successfully!"}), 201
