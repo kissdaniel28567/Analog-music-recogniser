@@ -8,30 +8,123 @@ A hagyományos bakelit-lemezjátszó legnagyobb hátránya, hogy a generált jel
 \section{A felhasznált módszerek rövid leírása}
 A rendszer egy kliens-szerver architektúrán alapul, ahol a backend és a frontend különálló egységekben működnek:
 \begin{itemize}
-    % TODO: A Python nyelvű backend a \texttt{sounddevice} és \texttt{NumPy} könyvtárakat használja a jel feldolgozásához.
-    % TODO: telepites, alap koivetelmenyek, operacios rendszer, UI rizsa (kurvasok) internet kapcsolat sibilance labjegyzet
-    \item \textbf{Audio elemzés és azonosítás:} A zeneszámok azonosításához külső Audio Fingerprinting API-kat (pl. Shazam) alkalmaz a rendszer, amelyek egyedi akusztikai „ujjlenyomatokat” hasonlítanak össze egy globális adatbázissal.
-    \item \textbf{Valós idejű kommunikáció:} A szerver és a felhasználói felület közötti adatcsere WebSockets (Socket.IO) technológiával történik, ami lehetővé teszi, hogy a diagnosztikai adatok és a dalszövegek késleltetés nélkül érkezzenek a képernyőre.
-    \item \textbf{Felhasználói felület:} Egy modern, reaktív weboldal (SPA), amely bármilyen eszközön (mobil, asztali) elérhető és dinamikusan változtatja a megjelenését a lejátszott album borítójához igazodva.
-    \item \textbf{Adatkezelés:} Az SQLite adatbázis tárolja a felhasználói beállításokat és a tű élettartamát, így a rendszerbe bejelentkezve a felhasználó mindig a saját konfigurációját kapja vissza.
+    \item \textbf{Audio elemzés és azonosítás:} A zeneszámok azonosításához külső Audio Fingerprinting API-kat (pl. Shazam) alkalmaz a rendszer, amelyek egyedi akusztikai „ujjlenyomatokat” hasonlítanak össze egy globális adatbázissal. 
+    \item \textbf{Folyamatos internetkapcsolat:} Fontos megjegyezni, hogy a program zavartalan működéséhez \textbf{aktív internetkapcsolat szükséges}. Ennek oka, hogy az analóg jelből kinyert „ujjlenyomatokat” a rendszer online szerverekkel azonosíttatja, illetve a nagy felbontású albumborítókat, a szinkronizált dalszövegeket és a Last.fm naplózást is az interneten keresztül éri el. Internet nélkül a szoftver csak a helyi diagnosztikai adatokat képes mutatni.
+    \item \textbf{Valós idejű kommunikáció:} A szerver és a felhasználói felület közötti adatcsere WebSockets technológiával történik, ami lehetővé teszi, hogy a diagnosztikai adatok és a dalszövegek késleltetés nélkül érkezzenek a képernyőre.
+    \item \textbf{Felhasználói felület:} Egy modern, webes felület (SPA), amely egy böngészőn keresztül bármilyen eszközön (mobiltelefon, táblagép, asztali számítógép) elérhető.
+    \item \textbf{Adatkezelés:} Az adatbázis helyben tárolja a felhasználói beállításokat és a tű élettartamát, így az adatok nem vesznek el az eszköz újraindításakor.
 \end{itemize}
 
 \section{A program használatához szükséges információk}
 
-\subsection{Telepítés és Indítás}
-A program Docker konténerben fut, ami egyszerűsíti a telepítést. A futtatáshoz szükség van egy USB audio interfészre, amelyhez a lemezjátszó csatlakozik.
-\begin{enumerate}
-    \item A Docker image letöltése és a konténer indítása a mellékelt \texttt{docker-compose.yml} fájllal.
-    \item A böngészőben a \texttt{http://localhost:5000} (vagy a szerver IP címe) megnyitása.
-\end{enumerate}
-
-\subsection{Alapvető Funkciók Használata}
+\subsection{Rendszerkövetelmények és Előfeltételek}
+A Smart Turntable Assistant használatához az alábbi hardveres és szoftveres feltételeknek kell teljesülniük:
 \begin{itemize}
-    \item \textbf{Zenehallgatás:} Helyezze a tűt a lemezre. A rendszer automatikusan érzékeli a hangot, azonosítja a számot és megjeleníti az albumborítót, valamint a dalszöveget.
-    \item \textbf{Hangszedő regisztrálása:} A profil menüben kell megadni az új tű típusát és a gyártó által meghatározott élettartamát. A rendszer ettől kezdve automatikusan számolja a lejátszott órákat.
-    \item \textbf{Diagnosztika:} A diagnosztika fülön valós időben követhető a „Rumble” (motorrezgés) és a „Sibilance” (magas frekvenciás torzítás) szintje, valamint a felületi pattogások száma.
-    \item \textbf{Testreszabás:} A vizuális beállításoknál módosítható a felület témája, hogy illeszkedjen a fizikai lemez színéhez.
+    \item \textbf{Hardver:} 
+    \begin{itemize}
+        \item Egy szabványos analóg lemezjátszó.
+        \item Egy USB audio interfész (hangkártya) vagy erősítő, amely összeköti a lemezjátszót a számítógéppel/szerverrel.
+        \item Egy számítógép, laptop vagy egykártyás számítógép (pl. Raspberry Pi), amelyen a szoftver fut.
+    \end{itemize}
+    \item \textbf{Szoftver (Operációs rendszer):} A program Windows, macOS és Linux operációs rendszereken egyaránt futtatható.
+    \item \textbf{Függőség (Dependency):} A telepítéshez elengedhetetlen a \textbf{Docker} és a \textbf{Docker Compose} nevű szoftverek megléte a gépen. Ezek biztosítják, hogy a program minden szükséges összetevővel együtt, egy zárt dobozban (konténerben) hibamentesen induljon el.
+    \item \textbf{Böngésző:} Bármilyen modern webböngésző (Google Chrome, Mozilla Firefox, Safari, Edge).
 \end{itemize}
 
-\subsection{Külső Integrációk}
-A Last.fm naplózás beállításához a profilba kell lépni, ahol a rendszer egy hitelesítési folyamat után kapcsolódik a felhasználó fiókjához. Ezután minden lejátszott szám automatikusan rögzítésre kerül a profilban.
+\subsection{Telepítés és Indítás lépésről lépésre}
+A szoftver telepítése és elindítása a következő egyszerű lépésekből áll:
+
+\begin{enumerate}
+    \item \textbf{Docker telepítése:} Amennyiben még nincs a gépén, töltse le és telepítse a Docker Desktop alkalmazást a hivatalos weboldalról, majd indítsa el.
+    \item \textbf{Fájlok előkészítése:} Töltse le a Smart Turntable Assistant projekt mappáját a számítógépére, amely tartalmazza a \texttt{docker-compose.yml} nevű indítófájlt.
+    \item \textbf{Terminál megnyitása:} Nyisson meg egy parancssort (Windows alatt: Parancssor / PowerShell, Mac/Linux alatt: Terminal), és navigáljon abba a mappába, ahová a fájlokat letöltötte.
+    \item \textbf{A rendszer elindítása:} Gépelje be a következő parancsot, majd nyomja meg az Enter-t:
+    \begin{verbatim}
+    docker compose up -d
+    \end{verbatim}
+    Ez a parancs letölti a szükséges összetevőket és a háttérben elindítja a programot. A \texttt{-d} kapcsoló biztosítja, hogy a terminált az indítás után be lehessen zárni.
+    \item \textbf{Felület megnyitása:} Nyissa meg a kedvenc webböngészőjét, és a címsorba gépelje be a következő címet: \texttt{http://localhost:5000} (Ha a szoftver egy másik gépen, pl. Raspberry Pi-n fut, a \texttt{localhost} helyére annak az eszköznek az IP címét kell beírni).
+\end{enumerate}
+
+\subsection{A Felhasználói Felület (UI) felépítése és használata}
+A webes felületet úgy terveztük meg, hogy letisztult és azonnal átlátható legyen. Az alkalmazás megnyitásakor egy bejelentkező képernyő (Login/Register) fogadja, ahol egy saját fiókot kell létrehoznia. Ez biztosítja, hogy a lemezjátszó-tű kopása és a beállításai csak az Ön számára legyenek elérhetőek.
+
+Sikeres bejelentkezés után a képernyő bal oldalán a lejátszó, jobb oldalán pedig az információs fülek (menüpontok) helyezkednek el.
+
+\subsubsection{Főképernyő (Dashboard) és a Lejátszó panel}
+A bal oldali panel a rendszer „szíve”, amely a zenehallgatás vizuális élményét adja.
+\begin{itemize}
+    \item \textbf{A lemezjátszó animációja:} Alapállapotban a digitális bakelitlemez áll. Amint a tűt a fizikai lemezre helyezi, a rendszer ezt érzékeli, és a képernyőn lévő lemez is forogni kezd („Listening...” felirat jelenik meg). 
+    \item \textbf{Az azonosított zeneszám:} Sikeres felismerés esetén a képernyőn megjelenik a lejátszott album nagy felbontású borítóképe, alatta pedig a zeneszám címe és az előadó. A borítókép a forgó lemez közepén (a címkén) is megjelenik.
+    \item \textbf{Lemez színének megváltoztatása:} Ha jobb gombbal kattint (vagy hosszan rányom) a forgó bakelitlemezre, egy felugró menüből kiválaszthatja a lemez színét és stílusát, hogy az pontosan passzoljon a fizikai lemezéhez.
+    \item \textbf{Kézi azonosítás (Detect Now):} Ha a rendszer valamiért nem ismerné fel automatikusan a dalt, a nagyítós „Detect Now” gombra kattintva bármikor kikényszeríthet egy új felismerési próbálkozást.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../Images/dashboard_player.png}
+    \caption{A Főképernyő lejátszó panelje aktív zenehallgatás közben.}
+    \label{fig:ui_player}
+\end{figure}
+
+\pagebreak
+
+\subsubsection{Dalszöveg (Lyrics) fül}
+A jobb oldali panelen a „LYRICS” fülre kattintva a felismert zeneszámhoz tartozó, időzített dalszöveg jelenik meg.
+\begin{itemize}
+    \item \textbf{Automatikus görgetés:} A szöveg a zene ritmusában, automatikusan gördül, és az éppen énekelt sor kiemelve jelenik meg.
+    \item \textbf{Finomhangolás (Sync controls):} Mivel a lemezjátszók sebessége (pitch) minimálisan eltérhet, előfordulhat, hogy a szöveg siet vagy késik. Ilyenkor a felül található gombokkal (\texttt{-1s}, \texttt{-0.25s}, \texttt{+0.25s}, \texttt{+1s}) tizedmásodperc pontossággal eltolhatja a szöveg időzítését. 
+    \item A \textbf{Resync} gombbal bármikor visszatérhet az automatikus követéshez, a bal oldali panelen lévő \textbf{Reset Sync} gombbal pedig alaphelyzetbe állíthatja az eltolásokat.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../Images/dashboard_lyrics.png}
+    \caption{Szinkronizált dalszöveg megjelenítése és finomhangoló kezelőszervei.}
+    \label{fig:ui_lyrics}
+\end{figure}
+
+\subsubsection{Diagnosztika (Diagnostics) fül}
+Ezen a fülön valós idejű statisztikákat és mozgó grafikonokat talál, amelyek a hanglemez és a lemezjátszó technikai állapotát mutatják.
+\begin{itemize}
+    \item \textbf{System Status (Rendszerállapot):} Mutatja, hogy a rendszer éppen várakozik (IDLE), aktív jelfolyamot vesz (ACTIVE STREAM), vagy a zene szünetel.
+    \item \textbf{Rumble (Motorrezgés) és Sibilance (Torzítás):} Színes csúszkákkal (amelyek pirosra váltanak, ha az érték túl magas) jelzi a mélyfrekvenciás motorzajt és a magasfrekvenciás sercegést. Ezek a mutatók segítenek a lemezjátszó ideális beállításában.
+    \item \textbf{Remaining Cartridge Hours (Hátralévő tű élettartam):} Egy folyamatjelző mutatja a beállított tű hátralévő üzemidejét.
+    \item \textbf{Detected Clicks (Kattogás és Idővonal):} Nemcsak a pattogások összesített számát mutatja, hanem egy \textbf{kis idővonalon pöttyökkel jelzi}, hogy a zeneszám melyik másodpercében történt a sercegés. Ez segít azonosítani a lemez sérült részeit.
+    \item \textbf{VU Meter (Kivezérlésjelző):} A hangerő szintjét mutatja. Ha a retro témát használja, ez klasszikus analóg mutatós műszerként (mutatós óraként) jelenik meg, ha modern témát, akkor LED-soros oszlopként.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../Images/dashboard_diagnostics.png}
+    \caption{Hardveres diagnosztika, kivezérlésjelzők és a pattogások idővonala.}
+    \label{fig:ui_diagnostics}
+\end{figure}
+
+\subsubsection{Profil, Hardver Beállítások és Tűkezelés}
+A jobb felső sarokban található avatarra (az Ön monogramjára) kattintva érheti el a privát profilját. Ez az oldal három fő részre van osztva:
+
+\textbf{1. Meghallgatott zenék és Hangszedők (Cartridges):}
+\begin{itemize}
+    \item \textbf{Listening History:} Itt láthatja a korábban sikeresen felismert és végighallgatott zeneszámait.
+    \item \textbf{Hangszedő regisztrálása:} A „New” gombra kattintva adhatja meg új tűjének nevét és várható élettartamát (pl. 300 óra). A listában a lefelé mutató nyílra kattintva lenyithatja a tű beállításait, ahol egy kattintással aktívvá teheti („Activate”), módosíthatja a limitet, esetleg nullázhatja („Reset”) vagy törölheti a tűt.
+\end{itemize}
+
+\textbf{2. Integrációk (Last.fm):}
+Ha szeretné, hogy a fizikai lemezeinek hallgatása is bekerüljön a digitális zenei statisztikáiba, itt a „Connect Last.fm” gombbal összekapcsolhatja a fiókját. A rendszer innentől automatikusan „scrobbolja” (naplózza) a felismert számokat.
+
+\textbf{3. Hardveres Beállítások (Hardware Settings):}
+Ez egy kritikus menüpont a program helyes működéséhez:
+\begin{itemize}
+    \item \textbf{Audio Input Device:} Itt választhatja ki a legördülő menüből, hogy melyik mikrofonon vagy hangkártyán keresztül érkezik a lemezjátszó hangja a gépbe.
+    \item \textbf{Music Start Sensitivity:} Egy csúszka, amivel beállíthatja, hogy a rendszer milyen hangerősséget tekintsen a zeneszám kezdetének. Ha túl lassan ismeri fel az indulást, vegye kisebbre az értéket.
+    \item \textbf{Click Detection Sensitivity:} Ezzel a csúszkával szabályozhatja, hogy mennyire legyen érzékeny a rendszer a lemez pattogására. Ha túl sok fals pattogást számol, tolja feljebb az értéket.
+\end{itemize}
+A változtatások érvényesítéséhez mindig kattintson a „Save Settings” gombra!
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../Images/profile_settings.png}
+    \caption{Profilkezelés, hangszedő konfiguráció és hardveres érzékenység beállítása.}
+    \label{fig:ui_profile}
+\end{figure}
