@@ -35,9 +35,9 @@ A Smart Turntable Assistant használatához az alábbi hardveres és szoftveres 
 A szoftver telepítése és elindítása a következő egyszerű lépésekből áll:
 
 \begin{enumerate}
-    \item \textbf{Docker telepítése:} Amennyiben még nincs a gépén, töltse le és telepítse a Docker Desktop alkalmazást a hivatalos weboldalról, majd indítsa el.
+    \item \textbf{Docker telepítése:} Amennyiben még nincs a gépén, töltse le és telepítse a Docker Desktop alkalmazást a hivatalos weboldalról (\url{https://www.docker.com/products/docker-desktop/}), majd indítsa el.
     \item \textbf{Fájlok előkészítése:} Töltse le a Smart Turntable Assistant projekt mappáját a számítógépére, amely tartalmazza a \texttt{docker-compose.yml} nevű indítófájlt.
-    \item \textbf{Terminál megnyitása:} Nyisson meg egy parancssort (Windows alatt: Parancssor / PowerShell, Mac/Linux alatt: Terminal), és navigáljon abba a mappába, ahová a fájlokat letöltötte.
+    \item \textbf{Terminál megnyitása:} Nyissa meg a letöltött projekt mappáját a fájlkezelőben, majd közvetlenül ebből a mappából indítson el egy parancssort. Windows rendszereken ezt a legegyszerűbben úgy teheti meg, ha a mappa felső címsorába belekattint, begépeli a \texttt{cmd} parancsot, majd entert üt (vagy jobb gombbal kattintva kiválasztja a "Megnyitás terminálban" lehetőséget). Mac és Linux alatt a beépített Terminal alkalmazást használva navigáljon a mappába.
     \item \textbf{A rendszer elindítása:} Gépelje be a következő parancsot, majd nyomja meg az Enter-t:
     \begin{verbatim}
     docker compose up -d
@@ -47,20 +47,27 @@ A szoftver telepítése és elindítása a következő egyszerű lépésekből �
 \end{enumerate}
 
 \subsection{A Felhasználói Felület (UI) felépítése és használata}
-A webes felületet úgy terveztük meg, hogy letisztult és azonnal átlátható legyen. Az alkalmazás megnyitásakor egy bejelentkező képernyő (Login/Register) fogadja, ahol egy saját fiókot kell létrehoznia. Ez biztosítja, hogy a lemezjátszó-tű kopása és a beállításai csak az Ön számára legyenek elérhetőek.
+A webes felületet úgy terveztük meg, hogy letisztult és azonnal átlátható legyen. Az alkalmazás megnyitásakor egy bejelentkező képernyő (Login/Register) fogadja, ahol egy saját fiókot kell létrehoznia. Ez biztosítja, hogy a lemezjátszótű kopása és a beállításai csak az Ön számára legyenek elérhetőek.
 
-Sikeres bejelentkezés után a képernyő bal oldalán a lejátszó, jobb oldalán pedig az információs fülek (menüpontok) helyezkednek el.
+Sikeres bejelentkezés után a képernyő bal oldalán a lejátszó, jobb oldalán pedig az információs fülek (menüpontok) helyezkednek el(lásd \ref{fig:ui_full_dashboard}. ábra).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{../Images/full_dashboard.png} 
+    \caption{A Smart Turntable Assistant teljes felhasználói felülete, a lejátszóval és a diagnosztikai panelekkel.}
+    \label{fig:ui_full_dashboard}
+\end{figure}
 
 \subsubsection{Főképernyő (Dashboard) és a Lejátszó panel}
 A bal oldali panel a rendszer „szíve”, amely a zenehallgatás vizuális élményét adja.
 \begin{itemize}
-    \item \textbf{A lemezjátszó animációja:} Alapállapotban a digitális bakelitlemez áll. Amint a tűt a fizikai lemezre helyezi, a rendszer ezt érzékeli, és a képernyőn lévő lemez is forogni kezd („Listening...” felirat jelenik meg). 
+    \item \textbf{A lemezjátszó animációja:} Alapállapotban a digitális bakelitlemez áll. Amint a tűt a fizikai lemezre helyezi, a rendszer ezt érzékeli, és a képernyőn lévő lemez is forogni kezd („Listening...” felirat jelenik meg). Ha nem sikerült a felismerés, kérhetünk manuális felismerést is.
     \item \textbf{Az azonosított zeneszám:} Sikeres felismerés esetén a képernyőn megjelenik a lejátszott album nagy felbontású borítóképe, alatta pedig a zeneszám címe és az előadó. A borítókép a forgó lemez közepén (a címkén) is megjelenik.
     \item \textbf{Lemez színének megváltoztatása:} Ha jobb gombbal kattint (vagy hosszan rányom) a forgó bakelitlemezre, egy felugró menüből kiválaszthatja a lemez színét és stílusát, hogy az pontosan passzoljon a fizikai lemezéhez.
     \item \textbf{Kézi azonosítás (Detect Now):} Ha a rendszer valamiért nem ismerné fel automatikusan a dalt, a nagyítós „Detect Now” gombra kattintva bármikor kikényszeríthet egy új felismerési próbálkozást.
 \end{itemize}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{../Images/dashboard_player.png}
     \caption{A Főképernyő lejátszó panelje aktív zenehallgatás közben.}
@@ -77,7 +84,7 @@ A jobb oldali panelen a „LYRICS” fülre kattintva a felismert zeneszámhoz t
     \item A \textbf{Resync} gombbal bármikor visszatérhet az automatikus követéshez, a bal oldali panelen lévő \textbf{Reset Sync} gombbal pedig alaphelyzetbe állíthatja az eltolásokat.
 \end{itemize}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{../Images/dashboard_lyrics.png}
     \caption{Szinkronizált dalszöveg megjelenítése és finomhangoló kezelőszervei.}
@@ -90,11 +97,11 @@ Ezen a fülön valós idejű statisztikákat és mozgó grafikonokat talál, ame
     \item \textbf{System Status (Rendszerállapot):} Mutatja, hogy a rendszer éppen várakozik (IDLE), aktív jelfolyamot vesz (ACTIVE STREAM), vagy a zene szünetel.
     \item \textbf{Rumble (Motorrezgés) és Sibilance (Torzítás):} Színes csúszkákkal (amelyek pirosra váltanak, ha az érték túl magas) jelzi a mélyfrekvenciás motorzajt és a magasfrekvenciás sercegést. Ezek a mutatók segítenek a lemezjátszó ideális beállításában.
     \item \textbf{Remaining Cartridge Hours (Hátralévő tű élettartam):} Egy folyamatjelző mutatja a beállított tű hátralévő üzemidejét.
-    \item \textbf{Detected Clicks (Kattogás és Idővonal):} Nemcsak a pattogások összesített számát mutatja, hanem egy \textbf{kis idővonalon pöttyökkel jelzi}, hogy a zeneszám melyik másodpercében történt a sercegés. Ez segít azonosítani a lemez sérült részeit.
+    \item \textbf{Detected Clicks (Pattogás és Idővonal):} Nemcsak a pattogások összesített számát mutatja, hanem egy \textbf{kis idővonalon pöttyökkel jelzi}, hogy a zeneszám melyik másodpercében történt a sercegés. Ez segít azonosítani a lemez sérült részeit.
     \item \textbf{VU Meter (Kivezérlésjelző):} A hangerő szintjét mutatja. Ha a retro témát használja, ez klasszikus analóg mutatós műszerként (mutatós óraként) jelenik meg, ha modern témát, akkor LED-soros oszlopként.
 \end{itemize}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{../Images/dashboard_diagnostics.png}
     \caption{Hardveres diagnosztika, kivezérlésjelzők és a pattogások idővonala.}
@@ -102,7 +109,7 @@ Ezen a fülön valós idejű statisztikákat és mozgó grafikonokat talál, ame
 \end{figure}
 
 \subsubsection{Profil, Hardver Beállítások és Tűkezelés}
-A jobb felső sarokban található avatarra (az Ön monogramjára) kattintva érheti el a privát profilját. Ez az oldal három fő részre van osztva:
+A jobb felső sarokban található avatar-ra (az Ön monogramjára) kattintva érheti el a privát profilját. Ez az oldal három fő részre van osztva:
 
 \textbf{1. Meghallgatott zenék és Hangszedők (Cartridges):}
 \begin{itemize}
@@ -117,12 +124,12 @@ Ha szeretné, hogy a fizikai lemezeinek hallgatása is bekerüljön a digitális
 Ez egy kritikus menüpont a program helyes működéséhez:
 \begin{itemize}
     \item \textbf{Audio Input Device:} Itt választhatja ki a legördülő menüből, hogy melyik mikrofonon vagy hangkártyán keresztül érkezik a lemezjátszó hangja a gépbe.
-    \item \textbf{Music Start Sensitivity:} Egy csúszka, amivel beállíthatja, hogy a rendszer milyen hangerősséget tekintsen a zeneszám kezdetének. Ha túl lassan ismeri fel az indulást, vegye kisebbre az értéket.
+    \item \textbf{Music Start Sensitivity:} Egy csúszka, amivel beállíthatja, hogy a rendszer milyen hangerősséget tekintsen a zeneszám kezdetének. Ha túl lassan ismeri fel az indulást, vegye kisebbre az értéket!
     \item \textbf{Click Detection Sensitivity:} Ezzel a csúszkával szabályozhatja, hogy mennyire legyen érzékeny a rendszer a lemez pattogására. Ha túl sok fals pattogást számol, tolja feljebb az értéket.
 \end{itemize}
 A változtatások érvényesítéséhez mindig kattintson a „Save Settings” gombra!
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{../Images/profile_settings.png}
     \caption{Profilkezelés, hangszedő konfiguráció és hardveres érzékenység beállítása.}
