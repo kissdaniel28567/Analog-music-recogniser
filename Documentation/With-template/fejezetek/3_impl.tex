@@ -1,0 +1,108 @@
+% !TeX root = ../main.tex
+
+\chapter{Fejlesztői dokumentáció}
+
+\section{Követelményelemzés és specifikáció}
+A rendszer alapvető célja egy olyan szoftveres megoldás létrehozása, amely képes egy analóg audio jelből zenei metaadatokat és diagnosztikai információkat kinyerni. A funkcionális és nem-funkcionális követelmények meghatározzák azokat a korlátokat és teljesítménymutatókat, amelyeket az architektúrának ki kell elégítenie.
+
+\subsection{Funkcionális követelmények}
+\begin{itemize}
+    %TODO: mindegyik diagram teljes kifejtese. Fallback kifejtese, adatbazis kifejtese, actorok kitorlese, kommunikacios diagram
+    %TODO: fallback logikak jobb kifejtese. Képletek berakasa. Butterworth cikk. Matekos labjegyzetek, frontend render kifejtese metodusonkent
+    %TODO: backend teljes dokumentalasa, kifejtese, funkciotonkent, e/1 atiras
+    %TODO: Click detection abra,
+    \item \textbf{Valós idejű audio azonosítás:} A rendszernek folyamatosan figyelnie kell a bejövő audio streamet, és automatikusan detektálnia kell a lejátszás kezdetét. Az észlelés után rögzítenie kell egy rövid audio buffert, és külső audio fingerprinting API-kat kell lekérdeznie a sáv azonosításához.
+    \item \textbf{Metaadat-bővítés:} Sikeres audio felismerés után másodlagos adatbázisokat kell lekérdeznie a nagy felbontású albumborítók, a pontos sávhosszúság és a szabványosított albumnév lekéréséhez.
+    \item \textbf{Szinkronizált dalszöveg megjelenítés:} A backend-nek le kell töltenie az időbélyeggel ellátott dalszövegfájlokat, a frontend-nek pedig automatikusan kell görgetnie a szöveget, szinkronban az élő lejátszási időzítővel.
+    \item \textbf{Hardverállapot-diagnosztika:} A szoftvernek matematikailag fel kell dolgoznia a hangot a hirtelen felületi pattogások detektálására, az alacsony frekvenciás mechanikai motorrezgés mérésére, és a magas frekvenciás sziszegő torzítás (sibilance) számszerűsítésére.
+    \item \textbf{Hangszedő életciklus kezelés:} Adatbázis fenntartása a felhasználó lemezjátszó tűiről, nyomon követve az aktív hardver kumulatív lejátszási idejét.
+    \item \textbf{Digitális hallgatási naplók:} Hitelesítés és automatikus scrobbling külső platformokra (pl. Last.fm).
+\end{itemize}
+
+\subsection{Nem-funkcionális követelmények}
+\begin{itemize}
+    \item \textbf{Teljesítmény és késleltetés:} A háttérben futó audiofeldolgozó szálnak folyamatosan működnie kell anélkül, hogy blokkolná a webszerver műveleteit. A diagnosztikai adatokat másodpercenként többször kell a frontend felé továbbítani.
+    \item \textbf{Megbízhatóság és Fallback mechanizmusok:} A hálózati lekérdezéseknek robusztus fallback stratégiákat kell alkalmazniuk. Ha egy elsődleges felismerő motor meghibásodik, a rendszernek meg kell próbálnia a másodlagos források használatát.
+    \item \textbf{Adatbázis-konkurencia:} A relációs adatbázisnak támogatnia kell az egyidejű olvasási és írásási műveleteket (Write-Ahead Logging módban).
+\end{itemize}
+
+\subsection{Használati esetek (Use Cases)}
+A felhasználó és a Smart Turntable Assistant közötti elsődleges interakciókat a \ref{fig:usecase}. ábra szemlélteti. A rendszer automatikusan detektálja a zeneszám kezdetét, azonosítja azt, és megjeleníti a szinkronizált dalszöveget. A felhasználó nyomon követheti a diagnosztikát, regisztrálhat új hangszedőt, és testreszabhatja a vizuális felületet a bakelitlemez színének megfelelően.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../Images/usecase.png}
+    \caption{UML Use Case Diagram a felhasználó és a rendszer interakcióiról.}
+    \label{fig:usecase}
+\end{figure}
+
+\section{Felhasznált technológiák és módszerek}
+Egy valós idejű hardvermonitorozó rendszer fejlesztése a digitális jelfeldolgozástól a modern webalkalmazás-architektúrákig számos tudományág integrációját igényli.
+
+\subsection{Audio Fingerprinting technológiák}
+Az audio fingerprinting egy hangminta azonosítására használt mechanizmus. A folyamat jellemzően az audiojel spektrogrammá alakítását, a nagy energiájú pontok azonosítását, és egy constellation map létrehozását foglalja magában, ami rendkívül ellenálló a bakelitlemezekre jellemző felületi sercegéssel szemben. A projektben az ACRCloud és a Shazam API kerül felhasználásra a felismerés elvégzésére.
+
+\subsection{Alkalmazott keretrendszerek és futtatási környezet}
+A backend Python nyelven készült, mivel kiterjedt ökoszisztémája (\texttt{NumPy, SciPy}) ideális a matematikai számításokhoz. A webszerver réteget a \texttt{Flask} hajtja meg. A frontend egy Vue.js alapú SPA, ahol a globális állapotkezelést a \texttt{Pinia} végzi. A valós idejű (zero-latency) kommunikációt a WebSockets (Socket.IO) biztosítja. 
+
+A környezeti izoláció és a hordozhatóság érdekében a rendszert Docker konténerbe csomagoltam, ami lehetővé teszi a hoszt ALSA és PulseAudio hangeszközeinek közvetlen leképezését a konténerbe (lásd \ref{fig:deployment}. ábra).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{../Images/deployement.png}
+    \caption{Deployment diagram, amely a Docker image felépítését mutatja be.}
+    \label{fig:deployment}
+\end{figure}
+
+\section{Szoftver architektúra és szerkezet}
+Az alkalmazás egy robusztus kliens-szerver modellt követ. A kommunikáció e két eltérő környezet között kétirányú: az állapotváltozásokat REST API végpontok, míg a telemetriát WebSocket csatornák kezelik.
+
+\subsection{Adatbázis Modell}
+A perzisztens adattárolást SQLite kezeli SQLAlchemy ORM használatával (lásd \ref{fig:database}. ábra). A \texttt{User} entitás biztosítja az adatok izolációját. A \texttt{Cartridge} tábla követi a tűk üzemóráit, míg a \texttt{TrackHistory} digitális hallgatási naplóként funkcionál. Az esztétikai preferenciákat az \texttt{AlbumColor} és \texttt{TrackOffset} táblák tárolják.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{../Images/database.png}
+    \caption{Entity-Relationship Diagram az adatbázis sémájáról.}
+    \label{fig:database}
+\end{figure}
+
+\subsection{Konkurencia és szálkezelés}
+A backend többszálú architektúrát alkalmaz (lásd \ref{fig:sequence}. ábra). Az elsődleges szál folyamatosan olvassa az audio buffert, számítja a diagnosztikát, és megállapítja egy új dal kezdetét. Ekkor elindít egy független másodlagos szálat, amely elvégzi a hálózati kéréseket az audio azonosításhoz, elkerülve a UI megfagyását.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{../Images/sequence.png}
+    \caption{UML Sequence Diagram a többszálú adatfeldolgozásról.}
+    \label{fig:sequence}
+\end{figure}
+
+\section{Megvalósítási részletek}
+
+\subsection{Digitális jelfeldolgozás (DSP)}
+Annak detektálására, hogy a felhasználó mikor teszi rá a tűt a lemezre, a rendszer kiszámítja az audio chunk RMS értékét. A felületi tökéletlenségek (clicks or pops) detektálásához a szoftver kiszámítja az audiojel első deriváltját, amely felül áteresztő szűrőként (high-pass filter) funkcionál. Ezen változások szórásának kiszámításával az algoritmus statisztikai kiugró értékeket keres. A rumble kiszámításához Fast Fourier Transzformációt (FFT) alkalmazok a 10Hz-50Hz közötti energia összegzéséhez, a sibilance-t pedig egy Butterworth sávszűrővel (5kHz-10kHz) határozom meg.
+
+\subsection{A vízesés elvű metaadat-stratégia}
+A hiányos információk elkerülése érdekében az alkalmazás egy cascading waterfall stratégiát alkalmaz. Az elsődleges fingerprinting API válasza alapján a backend lekérdezi az iTunes webszolgáltatást a nagy felbontású borítóképekért. Ha ez meghiúsul, a rendszer visszalép egy szövegalapú keresésre a \texttt{ytmusicapi} segítségével, és dinamikusan manipulálja a YouTube Music kép URL paramétereit a nagy felbontás garantálása érdekében.
+
+\subsection{Frontend renderelés és szinkronizáció}
+A Vue.js felület reszponzivitását CSS konténer-lekérdezések és dinamikus adatattribútumok (témázás) biztosítják. Szinkronizált dalszöveg esetén a frontend a letöltött időbélyegeket folyamatosan összehasonlítja a backend által közvetített élő lejátszási időzítővel, és a Vue \texttt{nextTick} renderelési ciklusát használja az aktív sor precíz görgetéséhez. A Last.fm scrobbling-ot egy háttérszál végzi, miután az eltelt sávidő eléri az 50\%-ot.
+
+\section{Tesztelés és Értékelés}
+
+\subsection{Manuális és integrációs tesztelés}
+A rendszert különféle fizikai bakelitlemezekkel (eltérő műfajok és felületi állapotok) értékeltük. Ismert fizikai sérülésekkel rendelkező lemezeket játszottunk le annak megerősítésére, hogy a pattogás detektáló (click detection) logika nem ad fals pozitív találatokat agresszív dob ütéseknél. A sibilance és a rumble mérőket szándékos követési torzítással, illetve motorrezgéssel teszteltük az FFT és a szűrők matematikai érvényességét.
+
+\subsection{Teljesítmény-optimalizáció}
+A kezdeti tesztelés feltárta, hogy a hangszedő statisztikáinak másodpercenkénti írása súlyos I/O szűk keresztmetszeteket okozott. Ezt az SQLite Write-Ahead Logging (WAL) módjának engedélyezésével és egy memóriabufferelő rendszer implementálásával oldottuk meg. A rendszer az értékeket a memóriában halmozza fel, és csak 10 másodpercenként írja ki a fizikai tárhelyre, ami drasztikusan csökkentette a CPU terhelését egy Raspberry Pi környezetben.
+
+\section{Mesterséges intelligencia alkalmazása a fejlesztés során}
+A projekt megvalósítása során modern nagynyelvi modellek (LLM) alkalmazása történt, amelyek elsődlegesen segítő eszközként, a fejlesztési folyamat gyorsítása és optimalizálása érdekében szolgáltak. Az AI használata a következő területeken történt:
+
+\begin{itemize}
+    \item \textbf{Koncepciók elsajátítása és kutatás:} Ismeretlen technológiai területek (például a digitális jelfeldolgozás specifikus matematikai műveletei vagy komplex API integrációk) esetén az AI-t mint gyors referenciát használtam. A kapott példakódokat nem implementáltam közvetlenül, hanem alapvető iránymutatónak tekintettem őket, amelyeket egy egyedi tervezési folyamat után adaptáltam a projekt specifikus igényeihez.
+    \item \textbf{Ismétlődő kódstruktúrák (boilerplate) generálása:} A fejlesztés során felmerülő repetitív feladatok, mint például a frontend és backend közötti alapvető adatcsere logikája vagy a standard API végpontok vázlata, generálása során alkalmaztam AI segítségét. Ezek a kódrészletek egy alapvázat szolgáltattak, amelyek végleges formáját manuális átírással és finomhangolással értem el.
+    \item \textbf{Hibakeresés és optimalizálás:} A debugolási folyamat során az AI-t kódrészletek elemzésére és potenciális hibaforrások gyorsabb azonosítására használtam. Mivel az AI nem ismerte a teljes projekt architektúráját, a javasolt megoldásokat kritikus szemlélettel szűrtem, és csak a projekt kontextusába illeszthető megoldásokat integráltam a végleges kódbázisba.
+\end{itemize}
+
+Külön kiemelném, hogy a rendszer architektúrájának tervezése, a specifikus matematikai logikák illesztése, valamint a végleges szoftveres implementáció teljes egészében a szerző munkájának eredménye. Az AI használata kizárólag a fejlesztési ciklus hatékonyságának növelésére és a tanulási folyamat gyorsítására szolgált.

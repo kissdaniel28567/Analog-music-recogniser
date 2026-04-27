@@ -1,0 +1,37 @@
+% !TeX root = ../main.tex
+
+\chapter{Felhasználói dokumentáció}
+
+\section{A megoldott probléma megfogalmazása}
+A hagyományos bakelit-lemezjátszó legnagyobb hátránya, hogy a generált jel egy nyers elektromos jel, amely nem tartalmaz metaadatokat. Ez azt jelenti, hogy a felhasználó számára nincs automatikus módja a lejátszott zeneszámok naplózására, nincs hozzáférése a szinkronizált dalszövegekhez, és nincs pontos eszköze a tű kopásának vagy a lemezjátszó technikai állapotának ellenőrzésére. A Smart Turntable Assistant ezen „információs vakpontot” törli el egy intelligens szoftverréteg bevezetésével.
+
+\section{A felhasznált módszerek rövid leírása}
+A rendszer egy kliens-szerver architektúrán alapul, ahol a backend és a frontend különálló egységekben működnek:
+\begin{itemize}
+    % TODO: A Python nyelvű backend a \texttt{sounddevice} és \texttt{NumPy} könyvtárakat használja a jel feldolgozásához.
+    % TODO: telepites, alap koivetelmenyek, operacios rendszer, UI rizsa (kurvasok) internet kapcsolat sibilance labjegyzet
+    \item \textbf{Audio elemzés és azonosítás:} A zeneszámok azonosításához külső Audio Fingerprinting API-kat (pl. Shazam) alkalmaz a rendszer, amelyek egyedi akusztikai „ujjlenyomatokat” hasonlítanak össze egy globális adatbázissal.
+    \item \textbf{Valós idejű kommunikáció:} A szerver és a felhasználói felület közötti adatcsere WebSockets (Socket.IO) technológiával történik, ami lehetővé teszi, hogy a diagnosztikai adatok és a dalszövegek késleltetés nélkül érkezzenek a képernyőre.
+    \item \textbf{Felhasználói felület:} Egy modern, reaktív weboldal (SPA), amely bármilyen eszközön (mobil, asztali) elérhető és dinamikusan változtatja a megjelenését a lejátszott album borítójához igazodva.
+    \item \textbf{Adatkezelés:} Az SQLite adatbázis tárolja a felhasználói beállításokat és a tű élettartamát, így a rendszerbe bejelentkezve a felhasználó mindig a saját konfigurációját kapja vissza.
+\end{itemize}
+
+\section{A program használatához szükséges információk}
+
+\subsection{Telepítés és Indítás}
+A program Docker konténerben fut, ami egyszerűsíti a telepítést. A futtatáshoz szükség van egy USB audio interfészre, amelyhez a lemezjátszó csatlakozik.
+\begin{enumerate}
+    \item A Docker image letöltése és a konténer indítása a mellékelt \texttt{docker-compose.yml} fájllal.
+    \item A böngészőben a \texttt{http://localhost:5000} (vagy a szerver IP címe) megnyitása.
+\end{enumerate}
+
+\subsection{Alapvető Funkciók Használata}
+\begin{itemize}
+    \item \textbf{Zenehallgatás:} Helyezze a tűt a lemezre. A rendszer automatikusan érzékeli a hangot, azonosítja a számot és megjeleníti az albumborítót, valamint a dalszöveget.
+    \item \textbf{Hangszedő regisztrálása:} A profil menüben kell megadni az új tű típusát és a gyártó által meghatározott élettartamát. A rendszer ettől kezdve automatikusan számolja a lejátszott órákat.
+    \item \textbf{Diagnosztika:} A diagnosztika fülön valós időben követhető a „Rumble” (motorrezgés) és a „Sibilance” (magas frekvenciás torzítás) szintje, valamint a felületi pattogások száma.
+    \item \textbf{Testreszabás:} A vizuális beállításoknál módosítható a felület témája, hogy illeszkedjen a fizikai lemez színéhez.
+\end{itemize}
+
+\subsection{Külső Integrációk}
+A Last.fm naplózás beállításához a profilba kell lépni, ahol a rendszer egy hitelesítési folyamat után kapcsolódik a felhasználó fiókjához. Ezután minden lejátszott szám automatikusan rögzítésre kerül a profilban.

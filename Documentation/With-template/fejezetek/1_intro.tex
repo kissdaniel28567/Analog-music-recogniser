@@ -1,0 +1,34 @@
+% !TeX root = ../main.tex
+
+\chapter{Bevezetés}
+
+\section{Témaválasztás indoklása}
+Az elmúlt években a zeneipar az analóg fizikai hordozók, különösen a bakelitlemezek népszerűségének példátlan visszatérését tapasztalta. Az audiofileket és a hétköznapi embereket egyaránt vonzza a mechanikus élmény, a szándékos cselekvés, amellyel egy albumot az elejétől a végéig meghallgatnak, valamint az analóg hangzás egyedi, meleg akusztikai jellemzője. Ugyanakkor egy olyan korszakban, amelyet a digitális streaming platformok, mint a Spotify és az Apple Music uralnak, a hagyományos hanglemez hallgatási élmény alapvetően elszigetelt marad a modern digitális ökoszisztémától.
+
+A témát azért választottam, mert létezik egy jelentős technológiai szakadék az analóg audio jel és a modern metaadat-kezelés között. Egy olyan eszköz létrehozása, amely képes hidat képezni a fizikai lemezjátszó és a digitális kényelmi funkciók között, nemcsak technikai kihívást jelent a valós idejű jelfeldolgozás terén, hanem valódi hozzáadott értéket nyújt a zenehallgatók számára, akik nem szeretnének lemondni az analóg élményről, de igényelnék a digitális kor előnyeit.
+
+Ez a szakdolgozat egy Smart Turntable Assistant (Okos Lemezjátszó Asszisztens) tervezését, architektúráját és megvalósítását mutatja be, amely egy szoftvervezérelt hidat képez az analóg audio hardverek és a modern digitális kényelmi funkciók között. Valós idejű jelfeldolgozás és külső API integrációk felhasználásával ez a projekt arra törekszik, hogy modernizálja az analóg zenehallgatás élményét anélkül, hogy a bakelitlemez-hallgatás élményébe, hangi világába beleszólna.
+
+\section{A megoldandó feladat leírása}
+A projekt célja egy olyan „Okos Lemezjátszó Asszisztens” szoftveres rendszer megvalósítása, amely passzívan figyeli egy szabványos lemezjátszó audio kimenetét, és automatikusan nyújt digitálisan kiegészítéseket a hallgatáshoz.
+
+A rendszernek a következő alapvető feladatokat kell megoldania:
+\begin{itemize}
+    \item \textbf{Automatikus felismerés:} A bejövő analóg jel alapján meg kell határozni, hogy egy zeneszám elkezdődött-e, majd audio fingerprinting segítségével azonosítania kell a pontos előadót és dalcímet.
+    \item \textbf{Metaadat-szinkronizáció:} A felismerést követően a rendszernek le kell kérdeznie a számhoz tartozó albumborítót és a szinkronizált dalszöveget, majd azt valós időben meg kell jelenítenie a felhasználónak.
+    \item \textbf{Hardveres monitorozás:} A szoftvernek matematikai elemzéssel nyomon kell követnie a hangszedő (tű) kopását a lejátszási órák alapján, valamint diagnosztikai adatokat (pl. motorrezgés, felületi zaj) kell szolgáltatnia.
+    \item \textbf{Digitális naplózás:} A hallgatási élményt automatikusan szinkronizálnia kell külső platformokkal (pl. Last.fm), így az analóg lejátszás is digitális nyomon követhetővé válik.
+\end{itemize}
+
+\section{A szakdolgozat célkitűzései}
+A szakdolgozat elsődleges célja egy robusztus, valós idejű Kliens-Szerver alkalmazás megtervezése és megvalósítása, amely passzívan figyeli egy szabványos lemezjátszó audio kimenetét, és „okos” funkciók átfogó készletét nyújtja. A rendszert úgy terveztem, hogy egy USB audio interfészhez csatlakoztatott, alacsony erőforrás-igényű hardveren fusson.
+
+A fent vázolt problémák megoldása érdekében a projekt a következő műszaki célkitűzéseket határozza meg:
+\begin{itemize}
+    \item \textbf{Valós idejű jelfeldolgozás:} Egy konkurens Python backend fejlesztése, amely képes az analóg audio stream folyamatos elemzésére egy zeneszám kezdetének vagy végének detektálásához, valamint a hardverdiagnosztikai adatok matematikai kiszámításához.
+    % TODO: labjegyzet
+    \item \textbf{Audio Fingerprinting és metaadat-bővítés:} Egy robusztus felismerési pipeline implementálása, amely rövid hangmintákat rögzít, és audio fingerprinting szolgáltatások segítségével azonosítja azokat. Továbbá egy waterfall elvű metaadat-lekérdező rendszer tervezése, amely megbízhatóan lekéri a pontos sávhosszokat, albumneveket és nagy felbontású borítóképeket.
+    \item \textbf{Automatizált digitális szinkronizáció:} Háttérszolgáltatások létrehozása az időbélyeggel ellátott dalszövegek letöltésére, valamint egy automatizált Last.fm scrobbling funkció implementálása, amely pontosan tiszteletben tartja a sáv eltelt lejátszási idejét.
+    \item \textbf{Adatbázis- és hardverkezelés:} Egy relációs adatbázis megvalósítása a hallgatási előzmények tárolására, a testreszabott vizuális preferenciák mentésére, valamint a felhasználó által definiált lemezjátszó-hangszedők életciklusának pontos nyomon követésére.
+    \item \textbf{Modern, reaktív felhasználói felület:} Egy reszponzív Single Page Application (SPA) tervezése Vue.js használatával, amely WebSockets technológián keresztül kommunikál a backenddel. Az interfésznek zero-latency vizuális visszajelzést kell nyújtania a felhasználók számára, és dinamikus tematikus testreszabhatóságot kell kínálnia.
+\end{itemize}
