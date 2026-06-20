@@ -188,25 +188,13 @@
 .v-electric-blue { background: #0000ff; }
 .v-royal-blue { background: #002366; opacity: 0.9; }
 .v-kelly-green { background: #4cbb17; }
-
-
-.v-rasta-split {
-    background: conic-gradient(#e20613 0 120deg, #f9e514 120deg 240deg, #009640 240deg 360deg);
-}
+.v-rasta-split { background: conic-gradient(#e20613 0 120deg, #f9e514 120deg 240deg, #009640 240deg 360deg); }
 
 /* Image-Based Textures */
-.v-galaxy-splash { 
-    background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/asidebside-vinyl.jpg') center/104% no-repeat; 
-}
-.v-blue-eggyoke { 
-    background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/color-in-color-vinyl.jpg') center/102% no-repeat; 
-}
-.v-gold-nugget { 
-    background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/gold-nugget.jpg') center/102% no-repeat; 
-}
-.v-blood-fire { 
-    background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/splatter-vinyl.jpg') center/102% no-repeat; 
-}
+.v-galaxy-splash { background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/asidebside-vinyl.jpg') center/104% no-repeat; }
+.v-blue-eggyoke { background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/color-in-color-vinyl.jpg') center/102% no-repeat; }
+.v-gold-nugget { background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/gold-nugget.jpg') center/102% no-repeat; }
+.v-blood-fire { background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/splatter-vinyl.jpg') center/102% no-repeat; }
 .v-blood { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-317.png') center/102% no-repeat; }
 .v-red-wings { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-332.png') center/102% no-repeat; }
 .v-angel-wings { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-400.png') center/102% no-repeat; }
@@ -376,6 +364,17 @@
     opacity: 0.8;
 }
 
+[data-style="retro"] .timeline-playhead  {
+    position: absolute;
+    top: 0; 
+    bottom: 0;
+    width: 2px;
+    background-color: rgb(211, 203, 203);
+    z-index: 10;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    transition: left 0.09s linear;
+}
+
 .timeline-playhead {
     position: absolute;
     top: 0; 
@@ -466,6 +465,12 @@
 .bar-fill {
     height: 100%;
     background: #fff;
+    transition: width 0.09s linear;
+}
+
+[data-style="retro"] .bar-fill  {
+    height: 100%;
+    background: rgb(211, 203, 203);
     transition: width 0.09s linear;
 }
 
