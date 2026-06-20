@@ -15,8 +15,15 @@ class MetadataService:
         data = self.fetch_apple(artist, title, external_ids.get('apple'))
         if data: return data
 
-        data = self.fetch_youtube(artist, title, external_ids.get('youtube'))
-        if data: return data
+        yt_data = self.fetch_youtube(artist, title, external_ids.get('youtube'))
+        
+        if yt_data:
+            mb_cover = self.fetch_musicbrainz_cover(artist, yt_data['album'])
+            if mb_cover:
+                yt_data['cover'] = mb_cover
+                yt_data['source'] = 'YouTube (Duration) + MusicBrainz (Cover)'
+            return yt_data
+
 
         return None
 
@@ -104,4 +111,34 @@ class MetadataService:
         except Exception as e:
             print(f"⚠️ YouTube Music Fetch Error: {e}")
         
+        return None
+    
+    def fetch_musicbrainz_cover(self, artist, album):
+        """ Uses MusicBrainz API to find the Release Group, then Cover Art Archive for the image """
+        try:
+            print("🖼️  Searching MusicBrainz for Cover Art...")
+            query = urllib.parse.quote(f'artist:"{artist}" AND releasegroup:"{album}"')
+            url = f"https://musicbrainz.org/ws/2/release-group/?query={query}&fmt=json&limit=1"
+            
+            headers = {'User-Agent': 'SmartTurntable/1.0 ( your@email.com )'}
+            req = urllib.request.Request(url, headers=headers)
+            
+            with urllib.request.urlopen(req, timeout=5) as response:
+                mb_data = json.loads(response.read().decode())
+                
+                if mb_data.get('release-groups'):
+                    mbid = mb_data['release-groups'][0]['id']
+                    
+                    cover_url = f"https://coverartarchive.org/release-group/{mbid}/front-500"
+                    
+                    try:
+                        ping_req = urllib.request.Request(cover_url, method='HEAD', headers=headers)
+                        urllib.request.urlopen(ping_req, timeout=3)
+                        print("✅ Found high-res cover art on MusicBrainz!")
+                        return cover_url
+                    except urllib.error.HTTPError:
+                        pass
+        except Exception as e:
+            print(f"⚠️ MusicBrainz Fetch Error: {e}")
+            
         return None

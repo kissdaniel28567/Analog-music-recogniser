@@ -1,6 +1,7 @@
 services:
+  
   backend:
-    build: 
+    build:
       context: ./backend
     container_name: smart_turntable_backend
     restart: unless-stopped
@@ -8,18 +9,36 @@ services:
       - "5000:5000"
     volumes:
       - ./backend:/app
-      - /run/user/1000/pulse/native:/run/user/1000/pulse/native
-      - ~/.config/pulse/cookie:/root/.config/pulse/cookie
-    environment:
-      - PYTHONUNBUFFERED=1
-      - PULSE_SERVER=unix:/run/user/1000/pulse/native
-      - PULSE_COOKIE=/run/pulse/cookie
-    devices:
-      - "/dev/snd:/dev/snd"
-    user: "1000:1000"
-    group_add:
-      - audio
 
+      # Host PulseAudio-compatible socket provided by pipewire-pulse
+      - /run/user/1000/pulse/native:/tmp/xdg-runtime/pulse/native
+
+      # Host native PipeWire socket
+      - /run/user/1000/pipewire-0:/tmp/xdg-runtime/pipewire-0
+
+      # Optional: Pulse cookie mounting
+      - /home/user/.config/pulse/cookie:/tmp/pulse-cookie:ro
+
+    environment:
+      PYTHONUNBUFFERED: "1"
+
+      # Let PulseAudio clients inside the container talk to host pipewire-pulse
+      PULSE_SERVER: unix:/tmp/xdg-runtime/pulse/native
+      PULSE_COOKIE: /tmp/pulse
+
+      # Let PipeWire-native clients inside the container talk to host PipeWire
+      XDG_RUNTIME_DIR: /tmp/xdg-runtime
+      PIPEWIRE_RUNTIME_DIR: /tmp/xdg-runtime
+      PIPEWIRE_REMOTE: pipewire-0
+
+    user: "1000:1000"
+
+    # Only keep this if your app really needs raw ALSA access
+    # devices:
+    #   - "/dev/snd:/dev/snd"
+    
+    # group_add:
+    #   - audio
 
   frontend:
     build:

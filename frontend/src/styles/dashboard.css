@@ -188,25 +188,32 @@
 .v-electric-blue { background: #0000ff; }
 .v-royal-blue { background: #002366; opacity: 0.9; }
 .v-kelly-green { background: #4cbb17; }
-
-
-.v-rasta-split {
-    background: conic-gradient(#e20613 0 120deg, #f9e514 120deg 240deg, #009640 240deg 360deg);
-}
+.v-rasta-split { background: conic-gradient(#e20613 0 120deg, #f9e514 120deg 240deg, #009640 240deg 360deg); }
 
 /* Image-Based Textures */
-.v-galaxy-splash { 
-    background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/asidebside-vinyl.jpg') center/104% no-repeat; 
-}
-.v-blue-eggyoke { 
-    background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/color-in-color-vinyl.jpg') center/102% no-repeat; 
-}
-.v-gold-nugget { 
-    background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/gold-nugget.jpg') center/102% no-repeat; 
-}
-.v-blood-fire { 
-    background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/splatter-vinyl.jpg') center/102% no-repeat; 
-}
+.v-galaxy-splash { background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/asidebside-vinyl.jpg') center/104% no-repeat; }
+.v-blue-eggyoke { background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/color-in-color-vinyl.jpg') center/102% no-repeat; }
+.v-gold-nugget { background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/gold-nugget.jpg') center/102% no-repeat; }
+.v-blood-fire { background: url('http://www.piratespress.com/vinyl-cheat-sheet/images/splatter-vinyl.jpg') center/102% no-repeat; }
+.v-blood { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-317.png') center/102% no-repeat; }
+.v-red-wings { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-332.png') center/102% no-repeat; }
+.v-angel-wings { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-400.png') center/102% no-repeat; }
+.v-fire-eyes { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-318.png') center/102% no-repeat; }
+.v-dark-plankton { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-431.png') center/102% no-repeat; }
+.v-saturn { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-432.png') center/102% no-repeat; }
+.v-earth-core { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-319.png') center/102% no-repeat; }
+.v-candy-galaxy { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-494.png') center/102% no-repeat; }
+.v-virus { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-488.png') center/102% no-repeat; }
+.v-night-marble { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-407.png') center/102% no-repeat; }
+.v-iris-marble { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-408.png') center/102% no-repeat; }
+.v-hell-marble { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-491.png') center/102% no-repeat; }
+.v-snowslide { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-295.png') center/102% no-repeat; }
+.v-milk-shake { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-482.png') center/102% no-repeat; }
+.v-black-hole { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-330.png') center/102% no-repeat; }
+.v-pride { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-397.png') center/102% no-repeat; }
+.v-lava { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-398.png') center/102% no-repeat; }
+.v-graphite { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-658.png') center/102% no-repeat; }
+.v-sea-blue-smoke { background: url('https://www.gzmedia.com/wp-content/uploads/2025/03/default-512.png') center/102% no-repeat; }
 
 /* =========================================
    CUSTOM CONTEXT MENU
@@ -328,11 +335,6 @@
     gap: 10px; 
 }
 
-/* --- 4. RIGHT PANEL (INFO) --- */
-/*.right-panel {
-     TODO: Create internal flex structure for tabs
-} */
-
 .timer-display {
     font-size: clamp(1.2rem, 2vw, 2.5rem);
     font-family: monospace;
@@ -360,6 +362,17 @@
     background-color: #ef4444;
     z-index: 5;
     opacity: 0.8;
+}
+
+[data-style="retro"] .timeline-playhead  {
+    position: absolute;
+    top: 0; 
+    bottom: 0;
+    width: 2px;
+    background-color: rgb(211, 203, 203);
+    z-index: 10;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    transition: left 0.09s linear;
 }
 
 .timeline-playhead {
@@ -452,6 +465,12 @@
 .bar-fill {
     height: 100%;
     background: #fff;
+    transition: width 0.09s linear;
+}
+
+[data-style="retro"] .bar-fill  {
+    height: 100%;
+    background: rgb(211, 203, 203);
     transition: width 0.09s linear;
 }
 

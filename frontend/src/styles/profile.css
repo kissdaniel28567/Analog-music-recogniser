@@ -31,6 +31,7 @@
     display: block;
     justify-content: space-between;
     padding: 0;
+    margin: 1em 0;
     background: var(--bg-input);
     overflow: hidden;
     transition: background-color 0.2s;
@@ -288,6 +289,62 @@ select, input[type="range"] {
 [data-style="retro"] .integration-text,
 [data-style="retro"] .integration-status.disconnected {
     color: #333;
+}
+
+.btn-activate {
+    background-color: transparent;
+    color: var(--success);
+    border: 1px solid var(--success);
+    padding: 8px 12px;
+    border-radius: var(--modern-btn-radius);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+.btn-activate:hover {
+    background-color: var(--success);
+    color: white;
+}
+
+[data-style="retro"] .btn-activate {
+    border-radius: 0;
+    border: 2px outset #fff;
+    background-color: #dfdfdf;
+    color: #000;
+}
+[data-style="retro"] .btn-activate:active {
+    border: 2px inset #fff;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background-color: var(--bg-card);
+    padding: 30px;
+    border-radius: var(--app-radius);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    width: 90%;
+    max-width: 400px;
+    border: var(--input-border);
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
 }
 
 .btn-secondary { background: var(--bg-input); color: var(--text-main); }

@@ -46,7 +46,6 @@ export function useDashboard() {
         console.log("🚀 Manual detection requested...");
         if (socket) socket.emit('manual_detect');
         
-        // server should change this in next iter. Might need to delete this
         isDetecting.value = true;
     };
 
@@ -117,6 +116,10 @@ export function useDashboard() {
         return 0;
     });
 
+    const isLyricsSynced = computed(() => {
+        return parsedLyrics.value.length > 0 && parsedLyrics.value[0].time !== -1;
+    });
+
     watch(activeLyricIndex, () => {
         if (isAutoScrollEnabled.value) {
             scrollToActive();
@@ -178,8 +181,6 @@ export function useDashboard() {
             totalClicks.value = clickHistory.value.reduce((sum, item) => sum + item.count, 0);
             trackTime.value = data.track_time || 0;
             
-            //console.log("Click histoty: " + clickHistory[0]);
-            
             if (data.recommended_hours) {                
                 maxHours.value = data.recommended_hours;
             }
@@ -187,8 +188,6 @@ export function useDashboard() {
             if (data.current_track && data.current_track.title) {
                 currentTrack.value = data.current_track;
                 parsedLyrics.value = parseLRC(data.current_track.lyrics);
-            } else if (!isDetecting.value) {
-                // TODO: Clear data if we are not busy looking for it
             }
         });
 
@@ -230,8 +229,6 @@ export function useDashboard() {
         }
     };
 
-
-
     return {
         authStore,
         showUserMenu,
@@ -261,6 +258,7 @@ export function useDashboard() {
         remainingPercent,
         isLowRemaining,
         isAutoScrollEnabled,
+        isLyricsSynced,
         adjustSync,
         handleUserScroll,
         resyncLyrics,
@@ -296,6 +294,26 @@ export function useVinylInteractions(themeStore, { contextMenuWidth = 220 } = {}
     { name: 'Blue w/ Eggyoke', class: 'v-blue-eggyoke' },
     { name: 'Gold Nugget', class: 'v-gold-nugget' },
     { name: 'Blood Fire', class: 'v-blood-fire' },
+
+    { name: 'Blood', class: 'v-blood' },
+    { name: 'Red Wings', class: 'v-red-wings' },
+    { name: 'Angel Wings', class: 'v-angel-wings' },
+    { name: 'Fire Eyes', class: 'v-fire-eyes' },
+    { name: 'Dark Plankton', class: 'v-dark-plankton' },
+    { name: 'Saturn', class: 'v-saturn' },
+    { name: 'Earth Core', class: 'v-earth-core' },
+    { name: 'Candy Galaxy', class: 'v-candy-galaxy' },
+    { name: 'Virus', class: 'v-virus' },
+    { name: 'Night Marble', class: 'v-night-marble' },
+    { name: 'Iris Marble', class: 'v-iris-marble' },
+    { name: 'Hell Marble', class: 'v-hell-marble' },
+    { name: 'Snowslide', class: 'v-snowslide' },
+    { name: 'Milk Shake', class: 'v-milk-shake' },
+    { name: 'Black Hole', class: 'v-black-hole' },
+    { name: 'Pride', class: 'v-pride' },
+    { name: 'Lava', class: 'v-lava' },
+    { name: 'Graphite', class: 'v-graphite' },
+    { name: 'Sea Blue Smoke', class: 'v-sea-blue-smoke' },
   ];
 
   const openContextMenu = (e) => {

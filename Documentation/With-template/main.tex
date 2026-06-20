@@ -1,0 +1,78 @@
+\documentclass[
+	final,
+]{elteikthesis}[2024/04/26]
+
+% Document's metadata
+\title{Smart Turntable Assistant} 
+\date{2026}
+
+\author{Kiss Dániel}
+\degree{programtervező informatikus BSc}
+
+\supervisor{Bense Viktor} 
+\affiliation{Doktorandusz}
+
+\university{Eötvös Loránd Tudományegyetem} 
+\faculty{Informatikai Kar} 
+\department{Programozási nyelvek és fordítóprogramok\\ tanszék}
+\city{Budapest} 
+\logo{elte_cimer_szines}
+
+\addbibresource{eltethesis.bib}
+
+
+\begin{document}
+\includepdf[pages=-]{temabejelento.pdf}
+\includepdf[pages=-]{szakdolg - kissd-nyil.pdf}
+\includepdf[pages=-]{Nyilatkozat MI eszköz felhasználásáról.pdf}
+
+
+\documentlang{hungarian}
+
+\maketitle
+
+\tableofcontents
+\cleardoublepage
+
+\input{fejezetek/1_intro.tex}
+\cleardoublepage
+
+\input{fejezetek/2_user.tex}
+\cleardoublepage
+
+\input{fejezetek/3_impl.tex}
+\cleardoublepage
+
+\input{fejezetek/4_sum.tex}
+\cleardoublepage
+
+\phantomsection
+\addcontentsline{toc}{chapter}{\lstfigurelabel}
+\listoffigures
+\cleardoublepage
+
+% List of figures (optional) - useful over 3-5 figures
+\phantomsection
+\addcontentsline{toc}{chapter}{\lstfigurelabel}
+\listoffigures
+\cleardoublepage
+
+% List of tables (optional) - useful over 3-5 tables
+\phantomsection
+\addcontentsline{toc}{chapter}{\lsttablelabel}
+\listoftables
+\cleardoublepage
+
+% List of algorithms (optional) - useful over 3-5 algorithms
+\phantomsection
+\addcontentsline{toc}{chapter}{\lstalgorithmlabel}
+\listofalgorithms
+\cleardoublepage
+
+% List of codes (optional) - useful over 3-5 code samples
+\phantomsection
+\addcontentsline{toc}{chapter}{\lstcodelabel}
+\lstlistoflistings
+\cleardoublepage
+
+\end{document}

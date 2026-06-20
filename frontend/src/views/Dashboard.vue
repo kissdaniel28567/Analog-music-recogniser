@@ -88,7 +88,7 @@
           </p>
 
           <div v-else class="lyrics-wrapper">
-            <div class="sync-controls">
+            <div v-if="isLyricsSynced" class="sync-controls">
               <button @click="adjustSync(-1)" class="sync-btn" title="Move Lyrics Backward">-1s</button>
               <button @click="adjustSync(-0.25)" class="sync-btn" title="Move Lyrics Backward">-0.25s</button>
               <button v-if="!isAutoScrollEnabled" @click="resyncLyrics" class="sync-btn resync-highlight">
@@ -118,19 +118,17 @@
               {{ isPlaying ? (isPaused ? 'MUSIC IS PAUSED' : "ACTIVE STREAM") : 'IDLE' }}
             </div>
           </div>
-          
+
           <div class="stat-item">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span class="stat-label">Mechanical Rumble (Low Freq)</span>
               <span style="font-size: 0.7rem; color: var(--text-muted);">{{ (currentRumble * 0.05).toFixed(3) }}</span>
             </div>
             <div class="bar-container" style="height: 12px;">
-              <div 
-                  class="bar-fill rumble-fill" 
-                  :style="{ 
-                      width: Math.min(currentRumble * 0.005, 100) + '%',
-                      backgroundColor: (currentRumble * 0.005) > 75 ? 'var(--danger)' : '#f59e0b'
-                  }">
+              <div class="bar-fill rumble-fill" :style="{
+                width: Math.min(currentRumble * 0.005, 100) + '%',
+                backgroundColor: (currentRumble * 0.005) > 75 ? 'var(--danger)' : '#f59e0b'
+              }">
               </div>
             </div>
             <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">
@@ -139,20 +137,19 @@
           </div>
 
           <div class="stat-item">
-             <div style="display:flex; justify-content:space-between; align-items:center;">
-                 <span class="stat-label">High-Freq Harshness (Sibilance)</span>
-                 <span style="font-size: 0.7rem; color: var(--text-muted);">{{ currentSibilance.toFixed(3) }}</span>
-             </div>
-             <div class="bar-container" style="height: 12px;">
-                <div class="bar-fill" 
-                     :style="{ 
-                         width: (currentSibilance * 100) + '%', 
-                         backgroundColor: currentSibilance > 0.5 ? 'var(--danger)' : '#f59e0b' 
-                     }">
-                </div>
-             </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="stat-label">High-Freq Harshness (Sibilance)</span>
+              <span style="font-size: 0.7rem; color: var(--text-muted);">{{ currentSibilance.toFixed(3) }}</span>
+            </div>
+            <div class="bar-container" style="height: 12px;">
+              <div class="bar-fill" :style="{
+                width: (currentSibilance * 100) + '%',
+                backgroundColor: currentSibilance > 0.5 ? 'var(--danger)' : '#f59e0b'
+              }">
+              </div>
+            </div>
           </div>
-          
+
           <div class="stat-item">
             <span class="stat-label">Remaining cartridge Hours</span>
 
@@ -197,18 +194,20 @@
 
         <!-- ANALOG VU METER -->
         <div v-if="themeStore.showVuMeter && themeStore.styleMode === 'retro'" class="analog-vu-wrapper">
-          
+
           <!-- Left Dial -->
           <div class="analog-meter">
             <div class="analog-scale"></div>
-            <div class="analog-needle" :style="{ transform: `rotate(${ -45 + Math.min(currentRMS_L * 500, 100) * 0.9 }deg)` }"></div>
+            <div class="analog-needle"
+              :style="{ transform: `rotate(${-45 + Math.min(currentRMS_L * 500, 100) * 0.9}deg)` }"></div>
             <div class="analog-label">VU L</div>
           </div>
 
           <!-- Right Dial -->
           <div class="analog-meter">
             <div class="analog-scale"></div>
-            <div class="analog-needle" :style="{ transform: `rotate(${ -45 + Math.min(currentRMS_R * 500, 100) * 0.9 }deg)` }"></div>
+            <div class="analog-needle"
+              :style="{ transform: `rotate(${-45 + Math.min(currentRMS_R * 500, 100) * 0.9}deg)` }"></div>
             <div class="analog-label">VU R</div>
           </div>
 
@@ -217,20 +216,20 @@
 
       <!-- VU METER -->
       <section v-if="themeStore.showVuMeter && themeStore.styleMode === 'modern'" class="panel vu-panel vertical-vu">
-          <div class="vu-channel">
-            <div class="vu-led-bar">
-               <div class="vu-led-fill" :style="{ height: Math.min(currentRMS_L * 500, 100) + '%' }"></div>
-            </div>
-            <span class="vu-label">L</span>
+        <div class="vu-channel">
+          <div class="vu-led-bar">
+            <div class="vu-led-fill" :style="{ height: Math.min(currentRMS_L * 500, 100) + '%' }"></div>
           </div>
-          
-          <div class="vu-channel">
-            <div class="vu-led-bar">
-               <div class="vu-led-fill" :style="{ height: Math.min(currentRMS_R * 500, 100) + '%' }"></div>
-            </div>
-            <span class="vu-label">R</span>
+          <span class="vu-label">L</span>
+        </div>
+
+        <div class="vu-channel">
+          <div class="vu-led-bar">
+            <div class="vu-led-fill" :style="{ height: Math.min(currentRMS_R * 500, 100) + '%' }"></div>
           </div>
-        </section>
+          <span class="vu-label">R</span>
+        </div>
+      </section>
     </main>
 
     <div v-if="showMenu" class="custom-context-menu" :style="{ left: menuX + 'px', top: menuY + 'px' }">
@@ -257,10 +256,10 @@ const themeStore = useThemeStore()
 const {
   authStore, showUserMenu, router, activeTab, isPlaying, isPaused,
   isDetecting, hoursPlayed, totalClicks, currentClicks, currentRMS, currentRMS_L, currentRMS_R,
-  currentTrack, trackTime, clickHistory, trackDuration, parsedLyrics, activeLyricIndex, 
-  lyricsContainerRef, maxHours, lowThreshold, remainingHours, remainingPercent, 
-  isLowRemaining, isAutoScrollEnabled, currentRumble, currentSibilance, 
-  adjustSync, handleUserScroll, resyncLyrics, formatTime, setVinylColor, 
+  currentTrack, trackTime, clickHistory, trackDuration, parsedLyrics, activeLyricIndex,
+  lyricsContainerRef, maxHours, lowThreshold, remainingHours, remainingPercent,
+  isLowRemaining, isAutoScrollEnabled, isLyricsSynced, currentRumble, currentSibilance,
+  adjustSync, handleUserScroll, resyncLyrics, formatTime, setVinylColor,
   triggerManualDetect, toggleUserMenu, handleLogout, resetSync
 } = useDashboard();
 

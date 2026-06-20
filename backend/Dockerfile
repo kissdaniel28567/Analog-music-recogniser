@@ -4,12 +4,15 @@ FROM python:3.11-slim-bookworm
 ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update && apt-get install -y \
-    libportaudio2 \
-    ffmpeg \
-    alsa-utils \
     libpulse0 \
+    pulseaudio-utils \
+    pipewire \
+    pipewire-bin \
+    alsa-utils \
+    libportaudio2 \
     libasound2-plugins \
-    && rm -rf /var/lib/apt/lists/*
+    libpulse0 \
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

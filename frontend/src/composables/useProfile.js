@@ -12,6 +12,8 @@ export function useProfile() {
     const devices = ref([]);
     const isSaving = ref(false);
     const expandedCartId = ref(null);
+    const showNewCartModal = ref(false);
+    const newCartData = ref({ name: '', recommended_hours: 1000 });
 
     const LASTFM_API_KEY = "38a0db497a6bcbcc8794b2b12a5dc8fd"; 
     
@@ -100,6 +102,37 @@ export function useProfile() {
         loadData(); 
     };
 
+    const addNewCartridge = async () => {
+        try {
+            await api.addCartridge(newCartData.value);
+            showNewCartModal.value = false;
+            newCartData.value = { name: '', recommended_hours: 1000 };
+            loadData();
+        } catch (e) {
+            alert("Failed to add cartridge.");
+        }
+    };
+    const activateCartridge = async (id) => {
+        try {
+            await api.setActiveCartridge(id);
+            loadData();
+        } catch (e) {
+            alert("Failed to activate cartridge.");
+        }
+    };
+
+    const deleteCartridge = async (id) => {
+        if (confirm("Are you sure you want to permanently delete this cartridge? This cannot be undone.")) {
+            try {
+                await api.deleteCartridge(id);
+                loadData();
+            } catch (e) {
+                alert(e.response?.data?.error || "Failed to delete cartridge.");
+            }
+        }
+    };
+
+
     return {
         router,
         profileData,
@@ -107,12 +140,17 @@ export function useProfile() {
         devices,
         isSaving,
         expandedCartId,
+        showNewCartModal,
+        newCartData,
+        deleteCartridge,
         saveSettings,
         handleLogout,
         resetCartridge,
         updateCartridgeLimit,
         toggleCartridge,
         connectLastFm,
-        disconnectLastFm
+        disconnectLastFm,
+        addNewCartridge,
+        activateCartridge
     }
 }
