@@ -119,13 +119,13 @@ def identify_and_save(app, device_id=None):
                     lrc_url = f"https://lrclib.net/api/get?artist_name={artist_safe}&track_name={track_safe}"
                     lrc_req = urllib.request.Request(lrc_url, headers={'User-Agent': 'SmartTurntable/1.0'})
                     
-                    with urllib.request.urlopen(lrc_req, timeout=5) as response:
+                    with urllib.request.urlopen(lrc_req, timeout=15) as response:
                         lrc_data = json.loads(response.read().decode())
                         lyrics = lrc_data.get('syncedLyrics') or lrc_data.get('plainLyrics') or ""
                         state.current_track['lyrics'] = lyrics
                         
                         if lrc_data.get('syncedLyrics'):
-                            print("📝 Synced lyrics found!")
+                            print("📝 Synced lyrics found!")    
                         elif lrc_data.get('plainLyrics'):
                             print("📜 Plain (unsynced) lyrics found.")
                         else:
